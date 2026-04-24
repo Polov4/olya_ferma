@@ -42,7 +42,6 @@
         .toast { position: fixed; top: 120px; left: 50%; transform: translateX(-50%); background: rgba(255, 112, 67, 0.95); color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; z-index: 2000; font-size: 14px; pointer-events: none; animation: floatUp 1.5s ease-out forwards; }
         @keyframes floatUp { 0% { opacity: 0; margin-top: 20px; } 20% { opacity: 1; margin-top: 0; } 80% { opacity: 1; margin-top: -10px; } 100% { opacity: 0; margin-top: -30px; } }
 
-        /* Модальные окна */
         .modal-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; animation: pop 0.2s; }
         @keyframes pop { from {transform: scale(0.8); opacity: 0;} to {transform: scale(1); opacity: 1;} }
@@ -54,7 +53,6 @@
 
         .top-panel { background: white; padding: 10px 15px; margin-bottom: 15px; border-radius: 15px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; color: #9b59b6; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 
-        /* Загрузочный экран */
         #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; font-size: 20px; font-weight: bold; color: var(--primary); }
     </style>
 </head>
@@ -88,9 +86,9 @@
         <div id="view-estate" class="view">
             <h3 style="margin-top:0">Глобальные стройки 🏗</h3>
             <div class="card estate-card" id="house-card"><div class="estate-icon">⛺</div><b>Палатка</b><br><small>Построй дом для пассивного дохода.</small><br><br><button class="btn blue" onclick="buildUpgrade('house', 300)">Дом (300 🪙)</button></div>
-            <div class="card estate-card" id="tractor-card"><div class="estate-icon">🚲</div><b>Старый велик</b><br><small>Трактор автоматически сажает и собирает то, что было.</small><br><br><button class="btn blue" onclick="buildUpgrade('tractor', 500)">Трактор (500 🪙)</button></div>
+            <div class="card estate-card" id="tractor-card"><div class="estate-icon">🚜</div><b>Трактор</b><br><small>Трактор автоматически сажает и собирает то, что было.</small><br><br><button class="btn blue" onclick="buildUpgrade('tractor', 500)">Трактор (500 🪙)</button></div>
             <div class="card estate-card" id="greenhouse-card"><div class="estate-icon">🌬</div><b>Открытый грунт</b><br><small>Теплица ускоряет рост в 2 раза.</small><br><br><button class="btn blue" onclick="buildUpgrade('greenhouse', 1500)">Теплица (1500 🪙)</button></div>
-            <div class="card estate-card" id="artur-card" style="border: 2px solid #f1c40f;"><div class="estate-icon">🧍‍♂️</div><b>Артур отдыхает</b><br><small>Артур выходит на смену: +10 🪙/сек, Цены x2.</small><br><br><button class="btn gold" onclick="buildUpgrade('artur', 5000)">Вызвать Артура (5000 🪙)</button></div>
+            <div class="card estate-card" id="artur-card" style="border: 2px solid #f1c40f;"><div class="estate-icon">🧍‍♂️</div><b>Артур отдыхает</b><br><small>Артур выходит на смену: +1 🪙/сек, Цены x2.</small><br><br><button class="btn gold" onclick="buildUpgrade('artur', 5000)">Вызвать Артура (5000 🪙)</button></div>
         </div>
 
         <div id="view-market" class="view">
@@ -149,7 +147,6 @@
         const loveMessages = ["У тебя все получится, твоя ферма лучшая! ❤️", "Ты очень сильно стараешься, ферма превосходная! ✨", "Мой умничка, за такую красоту целовать и целовать тебя 😘", "Моё сердце любит тебя и оно не подводит! 🍅❤️", "Тебя целовать — это лучшее ощущение 😘"];
         const miniToasts = ["Умница! ❤️", "Маладец! 🥰", "Идеально! 🌻", "Сбор! 📦"];
 
-        // Базовый State
         const DEFAULT_STATE = {
             coins: 150, 
             inventory: { wheat:0, tomato:0, corn:0, strawberry:0, egg:0, milk:0, truffle:0, fertilizer: 2 },
@@ -162,47 +159,36 @@
         let game = DEFAULT_STATE;
         let activePotIndex = null; 
 
-        // ИНИЦИАЛИЗАЦИЯ (Загрузка из Облака ТГ)
         function initGame() {
-            // Пробуем достать из Telegram CloudStorage
             tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => {
                 if (!err && value) {
                     try { game = JSON.parse(value); } 
                     catch(e) { game = JSON.parse(localStorage.getItem('olya_farm_local')) || DEFAULT_STATE; }
                 } else {
-                    // Фоллбэк на локальное хранилище, если облако пустое
                     game = JSON.parse(localStorage.getItem('olya_farm_local')) || DEFAULT_STATE;
                 }
-                
-                // Скрываем лоадер
                 document.getElementById('loader').style.display = 'none';
-                
-                // Считаем прогресс, пока она не играла
                 processOfflineProgress();
-                
                 render();
-                setInterval(gameLoop, 1000); // Запускаем цикл игры
+                setInterval(gameLoop, 1000);
             });
         }
 
-        // ОФЛАЙН-КАЛЬКУЛЯТОР
         function processOfflineProgress() {
             if (!game.lastSave) return;
             const now = Date.now();
             const elapsedMs = now - game.lastSave;
             const secondsPassed = Math.floor(elapsedMs / 1000);
-
-            if (secondsPassed < 60) return; // Меньше минуты не считаем
+            if (secondsPassed < 60) return;
 
             let earnedCoins = 0;
             let itemsHarvested = 0;
             let speedMod = game.upgrades.greenhouse ? 2 : 1;
 
-            // Считаем пассивные монеты
-            if (game.upgrades.house) earnedCoins += 1 * secondsPassed;
-            if (game.upgrades.artur) earnedCoins += 10 * secondsPassed;
+            // Дебафф: дом 1 монета в 10 сек, Артур 1 монета в сек
+            if (game.upgrades.house) earnedCoins += Math.floor(secondsPassed / 10);
+            if (game.upgrades.artur) earnedCoins += secondsPassed;
 
-            // Если есть трактор, он фармил за неё
             if (game.upgrades.tractor) {
                 game.pots.forEach(p => {
                     if (p.crop) {
@@ -215,7 +201,6 @@
                     if (cycles > 0) { game.inventory[ANIMALS[a.type].item] += cycles; itemsHarvested += cycles; a.time = now; }
                 });
             } else {
-                // Трактора нет, просто всё дозрело
                 game.pots.forEach(p => {
                     if (p.state === 'growing' && p.crop && elapsedMs >= (CROPS[p.crop].time / speedMod)) p.state = 'ready';
                 });
@@ -225,13 +210,10 @@
             }
 
             game.coins += earnedCoins;
-
-            // Показываем отчет, если заработала
             if (earnedCoins > 0 || itemsHarvested > 0) {
                 let report = `Тебя не было ${Math.floor(secondsPassed / 60)} мин.\n\n`;
                 if (earnedCoins > 0) report += `Пассивный доход: +${earnedCoins} 🪙\n`;
                 if (itemsHarvested > 0) report += `Трактор собрал ${itemsHarvested} ед. урожая! 🚜\n`;
-                
                 document.getElementById('modal-letter-text').innerText = report;
                 document.getElementById('modal-icon').innerText = '📊';
                 document.getElementById('modal-letter').style.display = 'flex';
@@ -239,12 +221,11 @@
             }
         }
 
-        // СОХРАНЕНИЕ
         function save() { 
             game.lastSave = Date.now();
             const dataStr = JSON.stringify(game);
-            localStorage.setItem('olya_farm_local', dataStr); // Локальный бекап
-            tg.CloudStorage.setItem('olya_farm_cloud', dataStr); // В облако Телеги
+            localStorage.setItem('olya_farm_local', dataStr);
+            tg.CloudStorage.setItem('olya_farm_cloud', dataStr);
             render(); 
         }
 
@@ -261,7 +242,6 @@
         }
 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
         function buyMessage() {
             if (game.coins >= 20) {
                 game.coins -= 20; tg.HapticFeedback.notificationOccurred('success');
@@ -270,16 +250,13 @@
                 document.getElementById('modal-letter').style.display = 'flex'; save();
             } else tg.HapticFeedback.notificationOccurred('error');
         }
-
         function openSeedModal(index) { activePotIndex = index; document.getElementById('modal-seeds').style.display = 'flex'; }
-        
         function plantSeed(cropName) {
             closeModal('modal-seeds');
             let p = game.pots[activePotIndex];
             p.state = 'growing'; p.crop = cropName; p.time = Date.now();
             tg.HapticFeedback.impactOccurred('light'); save();
         }
-
         function sellItem(item, basePrice) {
             if (game.inventory[item] > 0) {
                 game.inventory[item]--;
@@ -297,17 +274,16 @@
         }
 
         function updateEstateUI() {
-            if (game.upgrades.house) document.getElementById('house-card').innerHTML = '<div class="estate-icon">🏡</div><b>Дом</b><br><small>Приносит +1 🪙/сек</small>';
+            if (game.upgrades.house) document.getElementById('house-card').innerHTML = '<div class="estate-icon">🏡</div><b>Дом</b><br><small>Приносит +1 🪙/10 сек</small>';
             if (game.upgrades.tractor) document.getElementById('tractor-card').innerHTML = '<div class="estate-icon">🚜</div><b>Трактор</b><br><small>Автосбор и посадка</small>';
             if (game.upgrades.greenhouse) document.getElementById('greenhouse-card').innerHTML = '<div class="estate-icon">🌡</div><b>Теплица</b><br><small>Рост в 2 раза быстрее</small>';
-            if (game.upgrades.artur) document.getElementById('artur-card').innerHTML = '<div class="estate-icon">🏋️‍♂️</div><b>Артур Пашет</b><br><small>+10 🪙/сек и Цены рынка x2!</small>';
+            if (game.upgrades.artur) document.getElementById('artur-card').innerHTML = '<div class="estate-icon">🏋️‍♂️</div><b>Артур Пашет</b><br><small>+1 🪙/сек и Цены рынка x2!</small>';
         }
 
         function render() {
             document.getElementById('coins-display').innerText = game.coins;
             document.getElementById('fert-count').innerText = game.inventory.fertilizer;
             document.getElementById('fert-count2').innerText = game.inventory.fertilizer;
-            
             ['wheat','tomato','corn','strawberry','egg','milk','truffle'].forEach(item => {
                 document.getElementById('inv-'+item).innerText = game.inventory[item];
             });
@@ -319,7 +295,6 @@
                 if(p.state === 'empty') s.innerText = '🟫';
                 else if(p.state === 'growing') { s.innerText = '🌱'; s.innerHTML += '<div class="timer"></div>'; }
                 else s.innerText = CROPS[p.crop].emoji;
-                
                 s.onclick = () => {
                     if(p.state === 'empty') { openSeedModal(i); }
                     else if(p.state === 'growing') { 
@@ -338,7 +313,6 @@
                 const info = ANIMALS[a.type];
                 if(a.state === 'working') { s.innerText = info.w; s.innerHTML += '<div class="timer"></div>'; }
                 else s.innerText = info.r;
-                
                 s.onclick = () => {
                     if(a.state === 'working') {
                         if(game.inventory.fertilizer > 0) { game.inventory.fertilizer--; a.state = 'ready'; tg.HapticFeedback.notificationOccurred('success'); } 
@@ -351,13 +325,20 @@
             });
         }
 
-        // --- ИГРОВОЙ ЦИКЛ ---
         function gameLoop() {
             const now = Date.now(); let needsSave = false;
             let speedMod = game.upgrades.greenhouse ? 2 : 1;
+            const sec = Math.floor(now / 1000);
 
-            if (game.upgrades.house) { game.coins += 1; needsSave = true; }
-            if (game.upgrades.artur) { game.coins += 10; needsSave = true; }
+            // Дом дает монету каждые 10 секунд
+            if (game.upgrades.house && sec % 10 === 0 && !window.lastHouseSec) {
+                game.coins += 1; needsSave = true; window.lastHouseSec = sec;
+            } else if (sec % 10 !== 0) { window.lastHouseSec = null; }
+
+            // Артур дает монету каждую секунду
+            if (game.upgrades.artur && sec !== window.lastArturSec) {
+                game.coins += 1; needsSave = true; window.lastArturSec = sec;
+            }
 
             game.pots.forEach(p => {
                 if(p.state === 'growing' && p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) { p.state = 'ready'; needsSave = true; }
@@ -376,15 +357,12 @@
             }
 
             if (needsSave) {
-                // Чтобы не спамить облако Телеграма каждую секунду, мы сохраняем только локально каждую секунду,
-                // а в облако будем кидать только когда она что-то нажимает (функция save() выше).
                 game.lastSave = Date.now();
                 localStorage.setItem('olya_farm_local', JSON.stringify(game));
                 render();
             }
         }
 
-        // Запуск
         initGame();
     </script>
 </body>
