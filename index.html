@@ -149,10 +149,11 @@
             <div class="card" style="display:block;text-align:center;" id="house-card"></div>
             <div class="card" style="display:block;text-align:center;" id="tractor-card"></div>
             <div class="card" style="display:block;text-align:center;" id="greenhouse-card"></div>
+            <div class="card" style="display:block;text-align:center;" id="farmer-card"></div>
             <div class="card" style="display:block;text-align:center; border: 2px solid #f1c40f;" id="artur-card"></div>
             
             <h3 style="margin-top:20px">Добрые дела ❤️</h3>
-            <div class="card" style="border: 2px solid #e74c3c;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь любимому бро</small></div><button class="btn red" onclick="donateCharity()">1000 🪙</button></div>
+            <div class="card" style="border: 2px solid #e74c3c;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь любимому бро</small></div><button class="btn red" onclick="donateCharity()">10000 🪙</button></div>
         </div>
 
         <div id="view-market" class="view">
@@ -166,7 +167,7 @@
             <div class="card"><div>🐖 <b>Свинья</b> (Ур. 8)</div><button class="btn" onclick="buyAnimal('pig', 500, 8)" id="btn-pig">500 🪙</button></div>
             
             <h3>Письма ❤️</h3>
-            <div class="card" style="border: 2px solid #ff7043;"><div>💌 <b>Любовь Артура</b></div><button class="btn orange" onclick="buyMessage()">20 🪙</button></div>
+            <div class="card" style="border: 2px solid #ff7043;"><div>💌 <b>Любовь Артура</b></div><button class="btn orange" onclick="buyMessage()">100 🪙</button></div>
         </div>
     </div>
 
@@ -222,7 +223,8 @@
             inventory: { wheat:0, tomato:0, corn:0, strawberry:0, egg:0, milk:0, truffle:0, bread:0, cheese:0, cake:0, fertilizer: 2 },
             pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null})),
             animals: [], factories: [], orders: [],
-            upgrades: { house: false, tractor: false, greenhouse: false, artur: false },
+            upgrades: { house: false, artur: false },
+            tractors: [], greenhouses: [], farmers: [],
             lastFed: Date.now(),
             lastSave: Date.now()
         };
@@ -246,7 +248,6 @@
                 
                 let loadedData = null;
                 
-                // ИСПРАВЛЕНИЕ: Берем самое свежее сохранение (избегает загрузки старья из облака)
                 if (cloudData && localData) {
                     loadedData = (cloudData.lastSave > localData.lastSave) ? cloudData : localData;
                 } else {
@@ -262,11 +263,29 @@
                     game.animals = loadedData.animals || game.animals;
                     game.factories = loadedData.factories || [];
                     game.orders = loadedData.orders || [];
+                    
                     if (loadedData.upgrades) {
                         game.upgrades = { ...game.upgrades, ...loadedData.upgrades };
-                        if(game.upgrades.tractor === true) game.upgrades.tractor = Date.now() + 3600000;
-                        if(game.upgrades.greenhouse === true) game.upgrades.greenhouse = Date.now() + 36000000;
                     }
+                    
+                    game.tractors = loadedData.tractors || [];
+                    game.greenhouses = loadedData.greenhouses || [];
+                    game.farmers = loadedData.farmers || [];
+
+                    // Перенос старых сохранений (апгрейд трактора/теплицы в массивы)
+                    if (game.upgrades.tractor !== undefined && game.upgrades.tractor !== false) {
+                        if (typeof game.upgrades.tractor === 'number' && game.upgrades.tractor > Date.now()) {
+                            game.tractors.push({ expires: game.upgrades.tractor });
+                        }
+                        delete game.upgrades.tractor;
+                    }
+                    if (game.upgrades.greenhouse !== undefined && game.upgrades.greenhouse !== false) {
+                        if (typeof game.upgrades.greenhouse === 'number' && game.upgrades.greenhouse > Date.now()) {
+                            game.greenhouses.push({ expires: game.upgrades.greenhouse });
+                        }
+                        delete game.upgrades.greenhouse;
+                    }
+
                     game.lastFed = loadedData.lastFed || Date.now();
                     game.lastSave = loadedData.lastSave || Date.now();
                 }
@@ -278,14 +297,11 @@
                 setInterval(gameLoop, 1000);
             };
 
-            // Пытаемся получить сохранение из облака Телеграма
             if (tg.CloudStorage && tg.CloudStorage.getItem) {
                 try { 
                     tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => { startGame(err ? null : value); });
                 } catch(e) { startGame(null); }
             }
-
-            // ИСПРАВЛЕНИЕ: Если CloudStorage зависнет (частая беда на телефонах), через 1.5 сек игра запустится принудительно
             setTimeout(() => { startGame(null); }, 1500);
         }
 
@@ -295,10 +311,8 @@
             game.lastSave = Date.now();
             const dataStr = JSON.stringify(game);
             
-            // Локально сохраняем всегда и без задержек
             localStorage.setItem('olya_farm_local', dataStr);
             
-            // В облако сохраняем не чаще раза в 10 секунд (Телеграм блокирует спам запросами)
             if (tg.CloudStorage && tg.CloudStorage.setItem) {
                 if (forceCloud || (Date.now() - lastCloudSaveTime > 10000)) {
                     try {
@@ -310,12 +324,8 @@
             render(); 
         }
 
-        // ПРОВЕРКИ СТАТУСА
-        function isTractorActive() { return game.upgrades.tractor && game.upgrades.tractor > Date.now(); }
-        function isGreenhouseActive() { return game.upgrades.greenhouse && game.upgrades.greenhouse > Date.now(); }
-        function isArturHungry() { return Date.now() - game.lastFed > 14400000; } // 4 часа = 14400000 мс
+        function isArturHungry() { return Date.now() - game.lastFed > 14400000; } // 4 часа
 
-        // ФУНКЦИЯ КОРМЛЕНИЯ
         function feedArtur(type) {
             game.lastFed = Date.now();
             let msg = "Ммм, как вкусно! Артур снова готов пахать!";
@@ -333,24 +343,69 @@
             if (secondsPassed < 60) return;
             
             let earnedCoins = 0; let itemsHarvested = 0;
-            let speedMod = isGreenhouseActive() ? 2 : 1;
             let hungry = isArturHungry();
+            
+            // Очистка и получение актуальных лимитов
+            game.tractors = game.tractors.filter(t => t.expires > now);
+            game.greenhouses = game.greenhouses.filter(g => g.expires > now);
+            game.farmers = game.farmers.filter(f => f.expires > now);
+            
+            let activeTractors = game.tractors.length;
+            let activeGreenhouses = game.greenhouses.length;
+            let activeFarmers = game.farmers.length;
+            let animalCap = (activeFarmers * 2) + ((!hungry && game.upgrades.artur) ? 20 : 0);
             
             if (!hungry) {
                 if (game.upgrades.house) earnedCoins += Math.floor(secondsPassed / 10);
                 if (game.upgrades.artur) earnedCoins += secondsPassed;
             }
             
-            if (isTractorActive()) {
-                game.pots.forEach(p => { if (p.crop) { let cycles = Math.floor(elapsedMs / (CROPS[p.crop].time / speedMod)); if (cycles > 0) { game.inventory[p.crop] += cycles; itemsHarvested += cycles; p.time = now; } } });
-                game.animals.forEach(a => { let cycles = Math.floor(elapsedMs / (ANIMALS[a.type].time / speedMod)); if (cycles > 0) { game.inventory[ANIMALS[a.type].item] += cycles; itemsHarvested += cycles; a.time = now; } });
-            }
+            // Поля (Трактор больше не трогает животных, только теплицы и трактора для полей)
+            game.pots.forEach((p, i) => {
+                if (p.crop && p.state === 'growing') {
+                    let speedMod = (i < activeGreenhouses * 20) ? 2 : 1;
+                    if (i < activeTractors * 20) {
+                        let cycles = Math.floor(elapsedMs / (CROPS[p.crop].time / speedMod));
+                        if (cycles > 0) { 
+                            game.inventory[p.crop] += cycles; 
+                            itemsHarvested += cycles; 
+                            p.time = now; 
+                        } else if (elapsedMs >= CROPS[p.crop].time / speedMod) {
+                            p.state = 'ready';
+                        }
+                    } else {
+                        if (elapsedMs >= CROPS[p.crop].time / speedMod) {
+                            p.state = 'ready';
+                        }
+                    }
+                }
+            });
+            
+            // Животные (Фермеры и Артур)
+            game.animals.forEach((a, i) => {
+                if (a.state === 'working') {
+                    if (i < animalCap) {
+                        let cycles = Math.floor(elapsedMs / ANIMALS[a.type].time);
+                        if (cycles > 0) { 
+                            game.inventory[ANIMALS[a.type].item] += cycles; 
+                            itemsHarvested += cycles; 
+                            a.time = now; 
+                        } else if (elapsedMs >= ANIMALS[a.type].time) {
+                            a.state = 'ready';
+                        }
+                    } else {
+                        if (elapsedMs >= ANIMALS[a.type].time) {
+                            a.state = 'ready';
+                        }
+                    }
+                }
+            });
             
             game.factories.forEach(f => { if(f.state === 'working' && elapsedMs >= FACTORIES[f.id].time) f.state = 'ready'; });
             game.coins += earnedCoins;
             
             if (earnedCoins > 0 || itemsHarvested > 0) {
-                document.getElementById('modal-letter-text').innerText = `Тебя не было ${Math.floor(secondsPassed / 60)} мин.\nДоход: +${earnedCoins} 🪙\nТрактор собрал: ${itemsHarvested} ед.`;
+                document.getElementById('modal-letter-text').innerText = `Тебя не было ${Math.floor(secondsPassed / 60)} мин.\nДоход: +${earnedCoins} 🪙\nСобрано: ${itemsHarvested} ед.`;
                 document.getElementById('modal-icon').innerText = '📊'; document.getElementById('modal-letter').style.display = 'flex'; save(true);
             }
         }
@@ -384,7 +439,6 @@
                 let amt = Math.floor(Math.random() * 3) + 1;
                 reqs[item] = (reqs[item] || 0) + amt; totalValue += ITEMS_DATA[item].base * amt;
             }
-            // Бонус Артура работает только если он сыт
             let mult = (game.upgrades.artur && !isArturHungry()) ? 2 : 1;
             return { req: reqs, rewardCoins: Math.floor((totalValue * 1.5) * mult), rewardXp: Math.floor(totalValue * 0.8) + 10 };
         }
@@ -401,8 +455,8 @@
         function deleteOrder(index) { game.orders[index] = generateOrder(); save(true); }
 
         function donateCharity() {
-            if(game.coins >= 1000) {
-                game.coins -= 1000;
+            if(game.coins >= 10000) {
+                game.coins -= 10000;
                 document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя поддержка это лучшее исцеление.";
                 document.getElementById('modal-icon').innerText = '🏥';
                 document.getElementById('modal-letter').style.display = 'flex';
@@ -410,16 +464,37 @@
             } else tg.HapticFeedback.notificationOccurred('error');
         }
 
-        function buildUpgrade(type, price, durationMs = 0) {
+        function buyTractor() {
+            let price = 500 * game.level;
             if (game.coins >= price) {
-                if (durationMs > 0) {
-                    let currentExpiry = game.upgrades[type] && game.upgrades[type] > Date.now() ? game.upgrades[type] : Date.now();
-                    game.upgrades[type] = currentExpiry + durationMs;
-                } else {
-                    if (!game.upgrades[type]) game.upgrades[type] = true; else return;
-                }
-                game.coins -= price; tg.HapticFeedback.notificationOccurred('success'); save(true);
-            }
+                game.coins -= price;
+                game.tractors.push({ expires: Date.now() + 3600000 }); // 1 час
+                tg.HapticFeedback.notificationOccurred('success'); save(true);
+            } else tg.HapticFeedback.notificationOccurred('error');
+        }
+
+        function buyGreenhouse() {
+            let price = 1500 * game.level;
+            if (game.coins >= price) {
+                game.coins -= price;
+                game.greenhouses.push({ expires: Date.now() + 36000000 }); // 10 часов
+                tg.HapticFeedback.notificationOccurred('success'); save(true);
+            } else tg.HapticFeedback.notificationOccurred('error');
+        }
+
+        function buyFarmer() {
+            let price = 300;
+            if (game.coins >= price) {
+                game.coins -= price;
+                game.farmers.push({ expires: Date.now() + 3600000 }); // 1 час
+                tg.HapticFeedback.notificationOccurred('success'); save(true);
+            } else tg.HapticFeedback.notificationOccurred('error');
+        }
+
+        function buildUpgrade(type, price) {
+            if (game.coins >= price) {
+                if (!game.upgrades[type]) { game.upgrades[type] = true; game.coins -= price; tg.HapticFeedback.notificationOccurred('success'); save(true); }
+            } else tg.HapticFeedback.notificationOccurred('error');
         }
 
         function buildFactory(id, price, lvlReq) {
@@ -451,16 +526,26 @@
 
         function switchTab(tabId) { document.querySelectorAll('.view, .nav-btn').forEach(el => el.classList.remove('active')); document.getElementById('view-' + tabId).classList.add('active'); event.currentTarget.classList.add('active'); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function buyMessage() { if (game.coins >= 20) { game.coins -= 20; document.getElementById('modal-letter-text').innerText = loveMessages[Math.floor(Math.random() * loveMessages.length)]; document.getElementById('modal-icon').innerText = '💌'; document.getElementById('modal-letter').style.display = 'flex'; save(true); } }
+        
+        function buyMessage() { 
+            if (game.coins >= 100) { 
+                game.coins -= 100; 
+                document.getElementById('modal-letter-text').innerText = loveMessages[Math.floor(Math.random() * loveMessages.length)]; 
+                document.getElementById('modal-icon').innerText = '💌'; 
+                document.getElementById('modal-letter').style.display = 'flex'; 
+                save(true); 
+            } else tg.HapticFeedback.notificationOccurred('error');
+        }
+
         function openSeedModal(index) { activePotIndex = index; document.getElementById('modal-seeds').style.display = 'flex'; }
         function plantSeed(cropName, lvlReq) { if(game.level < lvlReq) return; closeModal('modal-seeds'); let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = cropName; p.time = Date.now(); save(true); }
         
-        function sellItem(item, basePrice) { 
-            if (game.inventory[item] > 0) { 
-                game.inventory[item]--; 
-                // Если Артур голоден, бонус х2 при продаже не работает
+        function sellItem(item, basePrice, sellAll = false) { 
+            let count = sellAll ? game.inventory[item] : 1;
+            if (count > 0) { 
+                game.inventory[item] -= count; 
                 let mult = (game.upgrades.artur && !isArturHungry()) ? 2 : 1;
-                game.coins += basePrice * mult; 
+                game.coins += (basePrice * count) * mult; 
                 save(true); 
             } 
         }
@@ -478,10 +563,8 @@
             document.getElementById('fert-count').innerText = game.inventory.fertilizer;
             document.getElementById('fert-count2').innerText = game.inventory.fertilizer;
 
-            // Кнопки семян (блокировка по уровню)
             ['tomato', 'corn', 'strawberry'].forEach(c => { let btn = document.getElementById('seed-'+c); if(game.level >= CROPS[c].lvl) btn.classList.remove('locked'); else btn.classList.add('locked'); });
             
-            // Кнопки магазина (блокировка по уровню и монетам)
             document.getElementById('btn-chicken').disabled = game.level < 3 || game.coins < 50;
             document.getElementById('btn-cow').disabled = game.level < 4 || game.coins < 200;
             document.getElementById('btn-pig').disabled = game.level < 8 || game.coins < 500;
@@ -493,16 +576,21 @@
             if(game.factories.find(f=>f.id==='dairy')) document.getElementById('btn-dairy').innerText = "Куплено";
             if(game.factories.find(f=>f.id==='cakeOven')) document.getElementById('btn-cake').innerText = "Куплено";
 
-            // Рендер Склада
+            // Рендер Склада с новыми кнопками "Всё"
             let invHTML = '';
             for(let item in ITEMS_DATA) {
                 if(game.inventory[item] > 0 || (item !== 'bread' && item !== 'cheese' && item !== 'cake')) {
-                    invHTML += `<div class="card"><span>${EMOJI[item]} ${ITEM_NAMES_RU[item]}: <b>${game.inventory[item]}</b></span><button class="btn" onclick="sellItem('${item}', ${ITEMS_DATA[item].base})">Продать</button></div>`;
+                    invHTML += `<div class="card" style="flex-wrap:wrap;">
+                        <span style="flex-grow:1;">${EMOJI[item]} ${ITEM_NAMES_RU[item]}: <b>${game.inventory[item]}</b></span>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn" style="padding:6px 10px;" onclick="sellItem('${item}', ${ITEMS_DATA[item].base}, false)">x1</button>
+                            <button class="btn orange" style="padding:6px 10px;" onclick="sellItem('${item}', ${ITEMS_DATA[item].base}, true)">Всё</button>
+                        </div>
+                    </div>`;
                 }
             }
             document.getElementById('inventory-list').innerHTML = invHTML;
             
-            // Рендер Кухни
             let hungry = isArturHungry();
             let statusTag = document.getElementById('hunger-status');
             let arturEmoji = document.getElementById('artur-status-emoji');
@@ -516,37 +604,29 @@
                 statusTag.innerText = "Сытый и мощный (Бонусы ON)";
                 statusTag.className = "status-tag tag-fed";
                 arturEmoji.innerText = "💪";
-                
-                // Высчитываем оставшееся время до голода
                 let diff = 14400000 - (Date.now() - game.lastFed);
-                let h = Math.floor(diff / 3600000);
-                let m = Math.floor((diff % 3600000) / 60000);
-                let s = Math.floor((diff % 60000) / 1000);
-                
-                // Форматируем с ведущими нулями
-                let hStr = h.toString().padStart(2, '0');
-                let mStr = m.toString().padStart(2, '0');
-                let sStr = s.toString().padStart(2, '0');
-                
-                document.getElementById('hunger-timer').innerText = `Снова захочу кушать через: ${hStr}:${mStr}:${sStr}`;
+                let h = Math.floor(diff / 3600000); let m = Math.floor((diff % 3600000) / 60000); let s = Math.floor((diff % 60000) / 1000);
+                document.getElementById('hunger-timer').innerText = `Снова захочу кушать через: ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             }
 
             // Рендер Усадьбы
             if (game.upgrades.house) document.getElementById('house-card').innerHTML = '<div style="font-size:40px">⛺</div><b>Палатка</b><br><small>Приносит +1 🪙/10 сек</small><br><br><button class="btn blue" disabled>Построено</button>';
             else document.getElementById('house-card').innerHTML = '<div style="font-size:40px">⛺</div><b>Палатка</b><br><small>Приносит +1 🪙/10 сек</small><br><br><button class="btn blue" onclick="buildUpgrade(\'house\', 300)">Дом (300 🪙)</button>';
             
-            let tActive = isTractorActive();
-            let tText = tActive ? 'Работает еще ' + Math.ceil((game.upgrades.tractor - Date.now())/60000) + ' мин' : 'Автосбор полей (1 час)';
-            document.getElementById('tractor-card').innerHTML = `<div style="font-size:40px">🚜</div><b>Трактор</b><br><small>${tText}</small><br><br><button class="btn blue" onclick="buildUpgrade('tractor', 500, 3600000)">${tActive ? 'Продлить' : 'Купить'} (500 🪙)</button>`;
+            let tPrice = 500 * game.level;
+            let tCount = game.tractors.length;
+            document.getElementById('tractor-card').innerHTML = `<div style="font-size:40px">🚜</div><b>Трактор</b><br><small>Активных: ${tCount} (на ${tCount*20} гр.)<br>Автосбор полей (1 час)</small><br><br><button class="btn blue" onclick="buyTractor()">Купить (${tPrice} 🪙)</button>`;
 
-            let gActive = isGreenhouseActive();
-            let gText = gActive ? 'Работает еще ' + Math.ceil((game.upgrades.greenhouse - Date.now())/3600000) + ' ч' : 'Рост x2 (10 часов)';
-            document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>${gText}</small><br><br><button class="btn blue" onclick="buildUpgrade('greenhouse', 1500, 36000000)">${gActive ? 'Продлить' : 'Купить'} (1500 🪙)</button>`;
+            let gPrice = 1500 * game.level;
+            let gCount = game.greenhouses.length;
+            document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>Активных: ${gCount} (на ${gCount*20} гр.)<br>Рост x2 (10 часов)</small><br><br><button class="btn blue" onclick="buyGreenhouse()">Купить (${gPrice} 🪙)</button>`;
 
-            if (game.upgrades.artur) document.getElementById('artur-card').innerHTML = '<div style="font-size:40px">🧍‍♂️</div><b>Артур Пашет</b><br><small>+1 🪙/сек и Цены рынка x2!</small><br><br><button class="btn gold" disabled>Вызван навсегда</button>';
-            else document.getElementById('artur-card').innerHTML = '<div style="font-size:40px">🧍‍♂️</div><b>Вызвать Артура</b><br><small>+1 🪙/сек и Цены рынка x2!</small><br><br><button class="btn gold" onclick="buildUpgrade(\'artur\', 15000)">Вызвать (15000 🪙)</button>';
+            let fCount = game.farmers.length;
+            document.getElementById('farmer-card').innerHTML = `<div style="font-size:40px">👨‍🌾</div><b>Фермер</b><br><small>Активных: ${fCount} (на ${fCount*2} жив.)<br>Автосбор животных (1 час)</small><br><br><button class="btn blue" onclick="buyFarmer()">Купить (300 🪙)</button>`;
 
-            // Рендер Заказов
+            if (game.upgrades.artur) document.getElementById('artur-card').innerHTML = '<div style="font-size:40px">🧍‍♂️</div><b>Артур Пашет</b><br><small>+1 🪙/сек, Цены x2, 20 животных</small><br><br><button class="btn gold" disabled>Вызван навсегда</button>';
+            else document.getElementById('artur-card').innerHTML = '<div style="font-size:40px">🧍‍♂️</div><b>Вызвать Артура</b><br><small>+1 🪙/сек, Цены x2, уход за 20 жив.</small><br><br><button class="btn gold" onclick="buildUpgrade(\'artur\', 20000)">Вызвать (20000 🪙)</button>';
+
             let oGrid = document.getElementById('orders-container'); oGrid.innerHTML = '';
             game.orders.forEach((o, i) => {
                 let reqHTML = ''; let canFulfill = true;
@@ -561,7 +641,6 @@
                     <button class="btn" onclick="fulfillOrder(${i})" ${canFulfill ? '' : 'disabled'}>Отдать</button></div></div></div>`;
             });
 
-            // Рендер Полей
             const fGrid = document.getElementById('farm-grid'); fGrid.innerHTML = '';
             game.pots.forEach((p, i) => {
                 const s = document.createElement('div'); s.className = 'slot';
@@ -570,7 +649,6 @@
                 fGrid.appendChild(s);
             });
 
-            // Рендер Животных
             const aGrid = document.getElementById('animal-grid'); aGrid.innerHTML = '';
             game.animals.forEach((a) => {
                 const s = document.createElement('div'); s.className = 'slot animal'; const info = ANIMALS[a.type];
@@ -579,7 +657,6 @@
                 aGrid.appendChild(s);
             });
 
-            // Рендер Заводов
             const facGrid = document.getElementById('factory-grid'); facGrid.innerHTML = '';
             game.factories.forEach((f, i) => {
                 const s = document.createElement('div'); s.className = 'slot factory'; const info = FACTORIES[f.id];
@@ -597,25 +674,43 @@
         }
 
         function gameLoop() {
-            const now = Date.now(); let needsSave = false; let speedMod = isGreenhouseActive() ? 2 : 1; const sec = Math.floor(now / 1000);
-            
-            // Проверка голода
+            const now = Date.now(); let needsSave = false; const sec = Math.floor(now / 1000);
             let hungry = isArturHungry();
 
-            // Пассивный доход работает только если Артур сыт
+            game.tractors = game.tractors.filter(t => t.expires > now);
+            game.greenhouses = game.greenhouses.filter(g => g.expires > now);
+            game.farmers = game.farmers.filter(f => f.expires > now);
+            
+            let activeTractors = game.tractors.length;
+            let activeGreenhouses = game.greenhouses.length;
+            let activeFarmers = game.farmers.length;
+            let animalCap = (activeFarmers * 2) + ((!hungry && game.upgrades.artur) ? 20 : 0);
+
             if (!hungry) {
                 if (game.upgrades.house && sec % 10 === 0 && !window.lastH) { game.coins += 1; needsSave = true; window.lastH = sec; } else if (sec % 10 !== 0) window.lastH = null;
                 if (game.upgrades.artur && sec !== window.lastA) { game.coins += 1; needsSave = true; window.lastA = sec; }
             }
             
-            game.pots.forEach(p => { if(p.state === 'growing' && p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) { p.state = 'ready'; needsSave = true; } });
-            game.animals.forEach(a => { if(a.state === 'working' && now - a.time >= (ANIMALS[a.type].time / speedMod)) { a.state = 'ready'; needsSave = true; } });
-            game.factories.forEach(f => { if(f.state === 'working' && now - f.time >= FACTORIES[f.id].time) { f.state = 'ready'; needsSave = true; } });
+            game.pots.forEach((p, i) => {
+                let speedMod = (i < activeGreenhouses * 20) ? 2 : 1;
+                if (p.state === 'growing' && p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) {
+                    p.state = 'ready'; needsSave = true;
+                }
+                if (p.state === 'ready' && i < activeTractors * 20) {
+                    p.state = 'growing'; p.time = now; game.inventory[p.crop]++; addXp(1); needsSave = true;
+                }
+            });
 
-            if (isTractorActive()) {
-                game.pots.forEach(p => { if (p.state === 'ready') { p.state = 'growing'; p.time = Date.now(); game.inventory[p.crop]++; addXp(1); needsSave = true; } });
-                game.animals.forEach(a => { if (a.state === 'ready') { a.state = 'working'; a.time = Date.now(); game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true; } });
-            }
+            game.animals.forEach((a, i) => {
+                if (a.state === 'working' && now - a.time >= ANIMALS[a.type].time) {
+                    a.state = 'ready'; needsSave = true;
+                }
+                if (a.state === 'ready' && i < animalCap) {
+                    a.state = 'working'; a.time = now; game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true;
+                }
+            });
+
+            game.factories.forEach(f => { if(f.state === 'working' && now - f.time >= FACTORIES[f.id].time) { f.state = 'ready'; needsSave = true; } });
             
             if (needsSave) save(); else render(); 
         }
