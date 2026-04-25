@@ -284,8 +284,8 @@
         // ФУНКЦИЯ КОРМЛЕНИЯ
         function feedArtur(type) {
             game.lastFed = Date.now();
-            let msg = "Ммм, вкусно! 💪 Артур снова в строю и готов пахать!";
-            if(type === 'love') msg = "Это было слаще любого торта! ❤️ Теперь я горы сверну ради тебя!";
+            let msg = "Ммм, как вкусно! Артур снова в строю и готов пахать!";
+            if(type === 'love') msg = "Это самое вкусно что было! Ты самая сладкая";
             tg.HapticFeedback.notificationOccurred('success');
             document.getElementById('modal-letter-text').innerText = msg;
             document.getElementById('modal-icon').innerText = '💪';
@@ -369,7 +369,7 @@
         function donateCharity() {
             if(game.coins >= 1000) {
                 game.coins -= 1000;
-                document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя помощь — это лучший протеин.";
+                document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя поддержка это лучшее исцеление.";
                 document.getElementById('modal-icon').innerText = '🏥';
                 document.getElementById('modal-letter').style.display = 'flex';
                 save(true);
