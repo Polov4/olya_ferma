@@ -161,7 +161,7 @@
             <div id="inventory-list"></div>
             <h3>Покупка для фермы ✨</h3>
             <div class="card" style="border: 2px solid #9b59b6;"><div>✨ <b>Удобрение</b></div><button class="btn purple" onclick="buyFertilizer()">20 🪙</button></div>
-            <div class="card"><div>🟫 <b>Грядка</b></div><button class="btn" onclick="buyPot()">30 🪙</button></div>
+            <div class="card"><div>🟫 <b>Грядка</b></div><button class="btn" onclick="buyPot()">70 🪙</button></div>
             <div class="card"><div>🐔 <b>Курица</b> (Ур. 3)</div><button class="btn" onclick="buyAnimal('chicken', 50, 3)" id="btn-chicken">50 🪙</button></div>
             <div class="card"><div>🐄 <b>Корова</b> (Ур. 4)</div><button class="btn" onclick="buyAnimal('cow', 200, 4)" id="btn-cow">200 🪙</button></div>
             <div class="card"><div>🐖 <b>Свинья</b> (Ур. 8)</div><button class="btn" onclick="buyAnimal('pig', 500, 8)" id="btn-pig">500 🪙</button></div>
@@ -363,8 +363,8 @@
             // Поля (Трактор больше не трогает животных, только теплицы и трактора для полей)
             game.pots.forEach((p, i) => {
                 if (p.crop && p.state === 'growing') {
-                    let speedMod = (i < activeGreenhouses * 20) ? 2 : 1;
-                    if (i < activeTractors * 20) {
+                    let speedMod = (i < activeGreenhouses * 8) ? 2 : 1;
+                    if (i < activeTractors * 8) {
                         let cycles = Math.floor(elapsedMs / (CROPS[p.crop].time / speedMod));
                         if (cycles > 0) { 
                             game.inventory[p.crop] += cycles; 
@@ -552,7 +552,7 @@
         
         function buyFertilizer() { if(game.coins >= 20) { game.coins -= 20; game.inventory.fertilizer++; save(true); } }
         function buyAnimal(type, price, lvlReq) { if (game.level >= lvlReq && game.coins >= price) { game.coins -= price; game.animals.push({type: type, state: 'working', time: Date.now()}); save(true); } }
-        function buyPot() { if (game.coins >= 30) { game.coins -= 30; game.pots.push({state: 'empty', crop: null, time: null}); save(true); } }
+        function buyPot() { if (game.coins >= 70) { game.coins -= 70; game.pots.push({state: 'empty', crop: null, time: null}); save(true); } }
 
         function render() {
             document.getElementById('coins-display').innerText = game.coins;
@@ -615,11 +615,11 @@
             
             let tPrice = 500 * game.level;
             let tCount = game.tractors.length;
-            document.getElementById('tractor-card').innerHTML = `<div style="font-size:40px">🚜</div><b>Трактор</b><br><small>Активных: ${tCount} (на ${tCount*20} гр.)<br>Автосбор полей (1 час)</small><br><br><button class="btn blue" onclick="buyTractor()">Купить (${tPrice} 🪙)</button>`;
+            document.getElementById('tractor-card').innerHTML = `<div style="font-size:40px">🚜</div><b>Трактор</b><br><small>Активных: ${tCount} (на ${tCount*8} гр.)<br>Автосбор полей (1 час)</small><br><br><button class="btn blue" onclick="buyTractor()">Купить (${tPrice} 🪙)</button>`;
 
             let gPrice = 1500 * game.level;
             let gCount = game.greenhouses.length;
-            document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>Активных: ${gCount} (на ${gCount*20} гр.)<br>Рост x2 (10 часов)</small><br><br><button class="btn blue" onclick="buyGreenhouse()">Купить (${gPrice} 🪙)</button>`;
+            document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>Активных: ${gCount} (на ${gCount*8} гр.)<br>Рост x2 (10 часов)</small><br><br><button class="btn blue" onclick="buyGreenhouse()">Купить (${gPrice} 🪙)</button>`;
 
             let fCount = game.farmers.length;
             document.getElementById('farmer-card').innerHTML = `<div style="font-size:40px">👨‍🌾</div><b>Фермер</b><br><small>Активных: ${fCount} (на ${fCount*2} жив.)<br>Автосбор животных (1 час)</small><br><br><button class="btn blue" onclick="buyFarmer()">Купить (300 🪙)</button>`;
@@ -692,11 +692,11 @@
             }
             
             game.pots.forEach((p, i) => {
-                let speedMod = (i < activeGreenhouses * 20) ? 2 : 1;
+                let speedMod = (i < activeGreenhouses * 8) ? 2 : 1;
                 if (p.state === 'growing' && p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) {
                     p.state = 'ready'; needsSave = true;
                 }
-                if (p.state === 'ready' && i < activeTractors * 20) {
+                if (p.state === 'ready' && i < activeTractors * 8) {
                     p.state = 'growing'; p.time = now; game.inventory[p.crop]++; addXp(1); needsSave = true;
                 }
             });
