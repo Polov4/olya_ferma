@@ -107,11 +107,11 @@
 
             <h3 style="margin-top:20px">Приготовить еду:</h3>
             <div class="card">
-                <div>🥣 <b>Завтрак качка</b><br><small>350г творога + 2 банана</small></div>
+                <div>🥣 <b>Мой завтрак</b><br><small>350г творога + 2 банана</small></div>
                 <button class="btn" onclick="feedArtur('breakfast')">Покормить</button>
             </div>
             <div class="card">
-                <div>🍗 <b>Обед чемпиона</b><br><small>200г риса + 300г филе</small></div>
+                <div>🍗 <b>Мой обед</b><br><small>200г риса + 300г филе</small></div>
                 <button class="btn" onclick="feedArtur('lunch')">Покормить</button>
             </div>
             <div class="card" style="border: 2px solid var(--primary);">
@@ -318,11 +318,11 @@
         // ФУНКЦИЯ КОРМЛЕНИЯ
         function feedArtur(type) {
             game.lastFed = Date.now();
-            let msg = "Ммм, как вкусно! Артур снова в строю и готов пахать!";
+            let msg = "Ммм, как вкусно! Артур снова готов пахать!";
             if(type === 'love') msg = "Это самое вкусно что было! Ты самая сладкая";
             tg.HapticFeedback.notificationOccurred('success');
             document.getElementById('modal-letter-text').innerText = msg;
-            document.getElementById('modal-icon').innerText = '💪';
+            document.getElementById('modal-icon').innerText = '❤️';
             document.getElementById('modal-letter').style.display = 'flex';
             save(true);
         }
