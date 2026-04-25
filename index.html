@@ -223,7 +223,7 @@
             pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null})),
             animals: [], factories: [], orders: [],
             upgrades: { house: false, tractor: false, greenhouse: false, artur: false },
-            lastFed: Date.now(), // Время последней кормежки
+            lastFed: Date.now(),
             lastSave: Date.now()
         };
 
@@ -233,10 +233,25 @@
         let activeFactoryIndex = null;
 
         function initGame() {
-            tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => {
+            let isLoaded = false;
+            const startGame = (cloudValue) => {
+                if (isLoaded) return;
+                isLoaded = true;
+
+                let cloudData = null;
+                let localData = null;
+                
+                try { if (cloudValue) cloudData = JSON.parse(cloudValue); } catch(e) {}
+                try { localData = JSON.parse(localStorage.getItem('olya_farm_local')); } catch(e) {}
+                
                 let loadedData = null;
-                if (!err && value) { try { loadedData = JSON.parse(value); } catch(e) {} }
-                if (!loadedData) { try { loadedData = JSON.parse(localStorage.getItem('olya_farm_local')); } catch(e) {} }
+                
+                // ИСПРАВЛЕНИЕ: Берем самое свежее сохранение (избегает загрузки старья из облака)
+                if (cloudData && localData) {
+                    loadedData = (cloudData.lastSave > localData.lastSave) ? cloudData : localData;
+                } else {
+                    loadedData = cloudData || localData;
+                }
                 
                 if (loadedData) {
                     game.level = loadedData.level || 1;
@@ -261,7 +276,17 @@
                 document.getElementById('loader').style.display = 'none';
                 processOfflineProgress(); render();
                 setInterval(gameLoop, 1000);
-            });
+            };
+
+            // Пытаемся получить сохранение из облака Телеграма
+            if (tg.CloudStorage && tg.CloudStorage.getItem) {
+                try { 
+                    tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => { startGame(err ? null : value); });
+                } catch(e) { startGame(null); }
+            }
+
+            // ИСПРАВЛЕНИЕ: Если CloudStorage зависнет (частая беда на телефонах), через 1.5 сек игра запустится принудительно
+            setTimeout(() => { startGame(null); }, 1500);
         }
 
         document.addEventListener('visibilitychange', () => { if (document.hidden) save(true); });
@@ -269,9 +294,18 @@
         function save(forceCloud = false) { 
             game.lastSave = Date.now();
             const dataStr = JSON.stringify(game);
+            
+            // Локально сохраняем всегда и без задержек
             localStorage.setItem('olya_farm_local', dataStr);
-            if (forceCloud || (Date.now() - lastCloudSaveTime > 5000)) {
-                tg.CloudStorage.setItem('olya_farm_cloud', dataStr); lastCloudSaveTime = Date.now();
+            
+            // В облако сохраняем не чаще раза в 10 секунд (Телеграм блокирует спам запросами)
+            if (tg.CloudStorage && tg.CloudStorage.setItem) {
+                if (forceCloud || (Date.now() - lastCloudSaveTime > 10000)) {
+                    try {
+                        tg.CloudStorage.setItem('olya_farm_cloud', dataStr); 
+                        lastCloudSaveTime = Date.now();
+                    } catch(e) {}
+                }
             }
             render(); 
         }
