@@ -1,402 +1,411 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ферма Оли 🌻</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root { 
-            --bg: #fff0f6; /* Нежно-розовый фон */
-            --primary: #f06292; /* Насыщенный розовый */
-            --accent: #ff80ab; /* Акцентный розовый */
-            --text: #4a4a4a; 
-            --xp: #ba68c8; 
-            --white: #ffffff;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; color: var(--text); overflow-x: hidden; }
-        
-        .header { background: var(--primary); color: white; padding: 10px 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 4px 10px rgba(240, 98, 146, 0.3); position: sticky; top:0; z-index: 100; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 18px; }
-        .balance { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 15px;}
-        .xp-bar-bg { background: rgba(0,0,0,0.1); height: 8px; border-radius: 4px; width: 100%; position: relative; overflow: hidden; }
-        .xp-bar-fill { background: #fff176; height: 100%; width: 0%; transition: width 0.3s; }
-        .level-text { font-size: 11px; text-align: right; margin-top: 2px; font-weight: bold; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ферма Оли 🌻</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { 
+            --bg: #fff0f6;
+            --primary: #f06292;
+            --accent: #ff80ab;
+            --text: #4a4a4a; 
+            --xp: #ba68c8; 
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; color: var(--text); overflow-x: hidden; }
+        
+        .header { background: var(--primary); color: white; padding: 10px 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 4px 10px rgba(240, 98, 146, 0.3); position: sticky; top:0; z-index: 100; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 18px; }
+        .balance { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 15px;}
+        .xp-bar-bg { background: rgba(0,0,0,0.1); height: 8px; border-radius: 4px; width: 100%; position: relative; overflow: hidden; }
+        .xp-bar-fill { background: #fff176; height: 100%; width: 0%; transition: width 0.3s; }
+        .level-text { font-size: 11px; text-align: right; margin-top: 2px; font-weight: bold; }
 
-        .nav { display: flex; background: white; border-bottom: 1px solid #f8bbd0; position: sticky; top: 73px; z-index: 99; overflow-x: auto; white-space: nowrap; }
-        .nav-btn { padding: 12px 15px; text-align: center; font-size: 12px; font-weight: bold; color: #f48fb1; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; flex-shrink: 0; }
-        .nav-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .nav { display: flex; background: white; border-bottom: 1px solid #f8bbd0; position: sticky; top: 73px; z-index: 99; overflow-x: auto; white-space: nowrap; }
+        .nav-btn { padding: 12px 15px; text-align: center; font-size: 12px; font-weight: bold; color: #f48fb1; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; flex-shrink: 0; }
+        .nav-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
 
-        .content { padding: 15px; padding-bottom: 80px; }
-        .view { display: none; }
-        .view.active { display: block; animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+        .content { padding: 15px; padding-bottom: 80px; }
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.2s; }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .slot { background: #f8bbd0; border-radius: 20px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 45px; position: relative; box-shadow: 0 5px 0 #f06292; transition: 0.1s; }
-        .slot.animal { background: #fce4ec; box-shadow: 0 5px 0 #f48fb1; }
-        .slot.factory { background: #f0f4f8; box-shadow: 0 5px 0 #d1d9e6; }
-        .slot:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
-        .timer { position: absolute; bottom: 5px; font-size: 10px; background: rgba(255,255,255,0.8); padding: 2px 6px; border-radius: 10px; font-weight: bold; color: var(--primary); }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .slot { background: #f8bbd0; border-radius: 20px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 45px; position: relative; box-shadow: 0 5px 0 #f06292; transition: 0.1s; }
+        .slot.animal { background: #fce4ec; box-shadow: 0 5px 0 #f48fb1; }
+        .slot.factory { background: #f0f4f8; box-shadow: 0 5px 0 #d1d9e6; }
+        .slot:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+        .timer { position: absolute; bottom: 5px; font-size: 10px; background: rgba(255,255,255,0.8); padding: 2px 6px; border-radius: 10px; font-weight: bold; color: var(--primary); }
 
-        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(244, 143, 177, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid #fce4ec; }
-        .btn { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 12px; min-width: 85px; box-shadow: 0 3px 0 #c2185b; }
-        .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #c2185b; }
-        .btn.blue { background: #64b5f6; box-shadow: 0 3px 0 #1e88e5; }
-        .btn.gold { background: #ffd54f; color: #5d4037; box-shadow: 0 3px 0 #fbc02d; }
-        .btn.red { background: #ff8a80; box-shadow: 0 3px 0 #e57373; }
-        .btn:disabled { background: #f5f5f5; color: #bdbdbd; box-shadow: none; }
+        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(244, 143, 177, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid #fce4ec; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 12px; min-width: 85px; box-shadow: 0 3px 0 #c2185b; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #c2185b; }
+        .btn.blue { background: #64b5f6; box-shadow: 0 3px 0 #1e88e5; }
+        .btn.gold { background: #ffd54f; color: #5d4037; box-shadow: 0 3px 0 #fbc02d; }
+        .btn.red { background: #ff8a80; box-shadow: 0 3px 0 #e57373; }
+        .btn:disabled { background: #f5f5f5; color: #bdbdbd; box-shadow: none; }
 
-        .status-tag { padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .tag-fed { background: #e8f5e9; color: #4caf50; }
-        .tag-hungry { background: #ffebee; color: #f44336; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.6; } }
+        .status-tag { padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .tag-fed { background: #e8f5e9; color: #4caf50; }
+        .tag-hungry { background: #ffebee; color: #f44336; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.6; } }
 
-        .modal-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 340px; text-align: center; border: 3px solid var(--primary); }
-        
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; color: var(--primary); font-weight: bold; }
-    </style>
+        .modal-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 340px; text-align: center; border: 3px solid var(--primary); }
+        
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; color: var(--primary); font-weight: bold; }
+    </style>
 </head>
 <body>
 
-    <div id="loader">💖 Загружаем розовую ферму...</div>
+    <div id="loader">💖 Загружаем розовую ферму...</div>
 
-    <div class="header">
-        <div class="header-top">
-            <div>Оленька-Агроном 🌸</div>
-            <div class="balance">🪙 <span id="coins-display">0</span></div>
-        </div>
-        <div class="xp-bar-bg"><div class="xp-bar-fill" id="xp-fill"></div></div>
-        <div class="level-text">⭐ Ур. <span id="lvl-display">1</span> | Опыт: <span id="xp-display">0</span>/<span id="xp-max">100</span></div>
-    </div>
+    <div class="header">
+        <div class="header-top">
+            <div>Оленька-Агроном 🌸</div>
+            <div class="balance">🪙 <span id="coins-display">0</span></div>
+        </div>
+        <div class="xp-bar-bg"><div class="xp-bar-fill" id="xp-fill"></div></div>
+        <div class="level-text">⭐ Ур. <span id="lvl-display">1</span> | Опыт: <span id="xp-display">0</span>/<span id="xp-max">100</span></div>
+    </div>
 
-    <div class="nav">
-        <div class="nav-btn active" onclick="switchTab('orders')">Заказы 📋</div>
-        <div class="nav-btn" onclick="switchTab('feeding')">Кухня 🍳</div>
-        <div class="nav-btn" onclick="switchTab('farm')">Поля 🌱</div>
-        <div class="nav-btn" onclick="switchTab('animals')">Животные 🐄</div>
-        <div class="nav-btn" onclick="switchTab('factories')">Заводы 🏭</div>
-        <div class="nav-btn" onclick="switchTab('market')">Склад 📦</div>
-        <div class="nav-btn" onclick="switchTab('estate')">Усадьба 🏡</div>
-    </div>
+    <div class="nav">
+        <div class="nav-btn active" onclick="switchTab('orders')">Заказы 📋</div>
+        <div class="nav-btn" onclick="switchTab('feeding')">Кухня 🍳</div>
+        <div class="nav-btn" onclick="switchTab('farm')">Поля 🌱</div>
+        <div class="nav-btn" onclick="switchTab('animals')">Животные 🐄</div>
+        <div class="nav-btn" onclick="switchTab('factories')">Заводы 🏭</div>
+        <div class="nav-btn" onclick="switchTab('market')">Склад 📦</div>
+        <div class="nav-btn" onclick="switchTab('estate')">Усадьба 🏡</div>
+    </div>
 
-    <div class="content">
-        <div id="view-feeding" class="view">
-            <div class="card" style="flex-direction:column; align-items:center; text-align:center;">
-                <div style="font-size:50px;" id="artur-status-emoji">💪</div>
-                <h3 style="margin:10px 0 5px 0;">Артурчик</h3>
-                <div id="hunger-status" class="status-tag tag-fed">Сытый и мощный</div>
-                <p id="hunger-timer" style="font-size:13px; font-weight:bold; color:var(--primary); margin:10px 0;">Следующий прием пищи через: 04:00:00</p>
-                <small style="color:#888;">Если Артур голоден, его бонусы не работают!</small>
-            </div>
+    <div class="content">
+        <div id="view-feeding" class="view">
+            <div class="card" style="flex-direction:column; align-items:center; text-align:center;">
+                <div style="font-size:50px;" id="artur-status-emoji">💪</div>
+                <h3 style="margin:10px 0 5px 0;">Артурчик</h3>
+                <div id="hunger-status" class="status-tag tag-fed">Сытый и мощный</div>
+                <p id="hunger-timer" style="font-size:13px; font-weight:bold; color:var(--primary); margin:10px 0;">Следующий прием пищи через: 04:00:00</p>
+                <small style="color:#888;">Если Артур голоден, его бонусы не работают!</small>
+            </div>
 
-            <h3 style="margin-top:20px">Приготовить еду:</h3>
-            <div class="card">
-                <div>🥣 <b>Завтрак качка</b><br><small>350г творога + 2 банана</small></div>
-                <button class="btn" onclick="feedArtur('breakfast')">Покормить</button>
-            </div>
-            <div class="card">
-                <div>🍗 <b>Обед чемпиона</b><br><small>200г риса + 300г филе</small></div>
-                <button class="btn" onclick="feedArtur('lunch')">Покормить</button>
-            </div>
-            <div class="card" style="border: 2px solid var(--primary);">
-                <div>🍰 <b>Особый десерт</b><br><small>Сладкая Оленька ❤️</small></div>
-                <button class="btn orange" onclick="feedArtur('love')">Обнять</button>
-            </div>
-        </div>
+            <h3 style="margin-top:20px">Приготовить еду:</h3>
+            <div class="card">
+                <div>🥣 <b>Завтрак качка</b><br><small>350г творога + 2 банана</small></div>
+                <button class="btn" onclick="feedArtur('breakfast')">Покормить</button>
+            </div>
+            <div class="card">
+                <div>🍗 <b>Обед чемпиона</b><br><small>200г риса + 300г филе</small></div>
+                <button class="btn" onclick="feedArtur('lunch')">Покормить</button>
+            </div>
+            <div class="card" style="border: 2px solid var(--primary);">
+                <div>🍰 <b>Особый десерт</b><br><small>Сладкая Оленька ❤️</small></div>
+                <button class="btn orange" onclick="feedArtur('love')">Обнять</button>
+            </div>
+        </div>
 
-        <div id="view-orders" class="view active">
-            <h3 style="margin-top:0">Заказы деревни 🚚</h3>
-            <div id="orders-container"></div>
-        </div>
+        <div id="view-orders" class="view active">
+            <h3 style="margin-top:0">Заказы деревни 🚚</h3>
+            <div id="orders-container"></div>
+        </div>
 
-        <div id="view-farm" class="view">
-            <div class="card" style="justify-content:center;">✨ Удобрения: <b id="fert-count" style="margin-left:5px">0</b></div>
-            <div class="grid" id="farm-grid"></div>
-        </div>
-        
-        <div id="view-animals" class="view">
-            <div class="card" style="justify-content:center;">✨ Удобрения: <b id="fert-count2" style="margin-left:5px">0</b></div>
-            <div class="grid" id="animal-grid"></div>
-        </div>
+        <div id="view-farm" class="view">
+            <div class="card" style="justify-content:center;">✨ Удобрения: <b id="fert-count" style="margin-left:5px">0</b></div>
+            <div class="grid" id="farm-grid"></div>
+        </div>
+        
+        <div id="view-animals" class="view">
+            <div class="card" style="justify-content:center;">✨ Удобрения: <b id="fert-count2" style="margin-left:5px">0</b></div>
+            <div class="grid" id="animal-grid"></div>
+        </div>
 
-        <div id="view-factories" class="view">
-            <h3 style="margin-top:0">Заводы 🏭</h3>
-            <div class="grid" id="factory-grid"></div>
-            <h3 style="margin-top:20px">Постройка</h3>
-            <div class="card"><div>🍞 <b>Пекарня</b> (Ур. 2)</div><button class="btn blue" onclick="buildFactory('bakery', 100, 2)" id="btn-bakery">100 🪙</button></div>
-            <div class="card"><div>🧀 <b>Молокозавод</b> (Ур. 4)</div><button class="btn blue" onclick="buildFactory('dairy', 300, 4)" id="btn-dairy">300 🪙</button></div>
-            <div class="card"><div>🎂 <b>Кондитерская</b> (Ур. 6)</div><button class="btn blue" onclick="buildFactory('cakeOven', 800, 6)" id="btn-cake">800 🪙</button></div>
-        </div>
+        <div id="view-factories" class="view">
+            <h3 style="margin-top:0">Заводы 🏭</h3>
+            <div class="grid" id="factory-grid"></div>
+            <h3 style="margin-top:20px">Постройка</h3>
+            <div class="card"><div>🍞 <b>Пекарня</b> (Ур. 2)</div><button class="btn blue" onclick="buildFactory('bakery', 100, 2)" id="btn-bakery">100 🪙</button></div>
+            <div class="card"><div>🧀 <b>Молокозавод</b> (Ур. 4)</div><button class="btn blue" onclick="buildFactory('dairy', 300, 4)" id="btn-dairy">300 🪙</button></div>
+            <div class="card"><div>🎂 <b>Кондитерская</b> (Ур. 6)</div><button class="btn blue" onclick="buildFactory('cakeOven', 800, 6)" id="btn-cake">800 🪙</button></div>
+        </div>
 
-        <div id="view-estate" class="view">
-            <h3 style="margin-top:0">Глобальные улучшения 🏗</h3>
-            <div class="card" style="display:block;text-align:center;" id="house-card"></div>
-            <div class="card" style="display:block;text-align:center;" id="tractor-card"></div>
-            <div class="card" style="display:block;text-align:center;" id="greenhouse-card"></div>
-            <div class="card" style="display:block;text-align:center; border: 2px solid #f1c40f;" id="artur-card"></div>
-            
-            <h3 style="margin-top:20px">Помощь ❤️</h3>
-            <div class="card" style="border: 2px solid #ff8a80;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь любимому бро</small></div><button class="btn red" onclick="donateCharity()">1000 🪙</button></div>
-        </div>
+        <div id="view-estate" class="view">
+            <h3 style="margin-top:0">Глобальные улучшения 🏗</h3>
+            <div class="card" style="display:block;text-align:center;" id="house-card"></div>
+            <div class="card" style="display:block;text-align:center;" id="tractor-card"></div>
+            <div class="card" style="display:block;text-align:center;" id="greenhouse-card"></div>
+            <div class="card" style="display:block;text-align:center; border: 2px solid #f1c40f;" id="artur-card"></div>
+            
+            <h3 style="margin-top:20px">Помощь ❤️</h3>
+            <div class="card" style="border: 2px solid #ff8a80;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь любимому бро</small></div><button class="btn red" onclick="donateCharity()">1000 🪙</button></div>
+        </div>
 
-        <div id="view-market" class="view">
-            <h3 style="margin-top:0">Твой Склад 📦</h3>
-            <div id="inventory-list"></div>
-            <h3>Магазин ✨</h3>
-            <div class="card" style="border: 2px solid var(--xp);"><div>✨ <b>Удобрение</b></div><button class="btn" style="background:var(--xp); box-shadow:0 3px 0 #8e24aa;" onclick="buyFertilizer()">20 🪙</button></div>
-            <div class="card"><div>🟫 <b>Грядка</b></div><button class="btn" onclick="buyPot()">30 🪙</button></div>
-            <div class="card"><div>🐔 <b>Курица</b> (Ур. 3)</div><button class="btn" onclick="buyAnimal('chicken', 50, 3)" id="btn-chicken">50 🪙</button></div>
-            <div class="card"><div>🐄 <b>Корова</b> (Ур. 4)</div><button class="btn" onclick="buyAnimal('cow', 200, 4)" id="btn-cow">200 🪙</button></div>
-            <div class="card"><div>🐖 <b>Свинья</b> (Ур. 8)</div><button class="btn" onclick="buyAnimal('pig', 500, 8)" id="btn-pig">500 🪙</button></div>
-            <div class="card" style="border: 2px solid var(--accent);"><div>💌 <b>Любовь Артура</b></div><button class="btn orange" onclick="buyMessage()">20 🪙</button></div>
-        </div>
-    </div>
+        <div id="view-market" class="view">
+            <h3 style="margin-top:0">Твой Склад 📦</h3>
+            <div id="inventory-list"></div>
+            <h3>Магазин ✨</h3>
+            <div class="card" style="border: 2px solid var(--xp);"><div>✨ <b>Удобрение</b></div><button class="btn" style="background:var(--xp); box-shadow:0 3px 0 #8e24aa;" onclick="buyFertilizer()">20 🪙</button></div>
+            <div class="card"><div>🟫 <b>Грядка</b></div><button class="btn" onclick="buyPot()">30 🪙</button></div>
+            <div class="card"><div>🐔 <b>Курица</b> (Ур. 3)</div><button class="btn" onclick="buyAnimal('chicken', 50, 3)" id="btn-chicken">50 🪙</button></div>
+            <div class="card"><div>🐄 <b>Корова</b> (Ур. 4)</div><button class="btn" onclick="buyAnimal('cow', 200, 4)" id="btn-cow">200 🪙</button></div>
+            <div class="card"><div>🐖 <b>Свинья</b> (Ур. 8)</div><button class="btn" onclick="buyAnimal('pig', 500, 8)" id="btn-pig">500 🪙</button></div>
+            <div class="card" style="border: 2px solid var(--accent);"><div>💌 <b>Любовь Артура</b></div><button class="btn orange" onclick="buyMessage()">20 🪙</button></div>
+        </div>
+    </div>
 
-    <div id="modal-letter" class="modal-backdrop"><div class="modal-content"><div style="font-size: 40px;" id="modal-icon">💌</div><div id="modal-letter-text" style="font-size: 15px; margin: 20px 0; font-weight:bold; color: var(--primary);"></div><button class="btn" onclick="closeModal('modal-letter')">Закрыть</button></div></div>
-    
-    <div id="modal-seeds" class="modal-backdrop"><div class="modal-content"><h3>Посадка 🌱</h3><div class="seed-grid"><div class="seed-btn" onclick="plantSeed('wheat', 1)" id="seed-wheat"><span>🌾</span>Пш.</div><div class="seed-btn" onclick="plantSeed('tomato', 2)" id="seed-tomato"><span>🍅</span>Томат</div><div class="seed-btn" onclick="plantSeed('corn', 4)" id="seed-corn"><span>🌽</span>Кукур.</div><div class="seed-btn" onclick="plantSeed('strawberry', 5)" id="seed-strawberry"><span>🍓</span>Клубн.</div></div><br><button class="btn" onclick="closeModal('modal-seeds')">Отмена</button></div></div>
+    <div id="modal-letter" class="modal-backdrop"><div class="modal-content"><div style="font-size: 40px;" id="modal-icon">💌</div><div id="modal-letter-text" style="font-size: 15px; margin: 20px 0; font-weight:bold; color: var(--primary);"></div><button class="btn" onclick="closeModal('modal-letter')">Закрыть</button></div></div>
+    
+    <div id="modal-seeds" class="modal-backdrop"><div class="modal-content"><h3>Посадка 🌱</h3><div class="seed-grid"><div class="seed-btn" onclick="plantSeed('wheat', 1)" id="seed-wheat"><span>🌾</span>Пш.</div><div class="seed-btn" onclick="plantSeed('tomato', 2)" id="seed-tomato"><span>🍅</span>Томат</div><div class="seed-btn" onclick="plantSeed('corn', 4)" id="seed-corn"><span>🌽</span>Кукур.</div><div class="seed-btn" onclick="plantSeed('strawberry', 5)" id="seed-strawberry"><span>🍓</span>Клубн.</div></div><br><button class="btn" onclick="closeModal('modal-seeds')">Отмена</button></div></div>
 
-    <div id="modal-factory" class="modal-backdrop"><div class="modal-content"><h3 id="mf-title">Завод</h3><div style="font-size:13px; margin-bottom:15px; color:#666;" id="mf-req"></div><button class="btn blue" id="mf-btn" onclick="startFactory()">Пуск</button><br><br><button class="btn" onclick="closeModal('modal-factory')">Отмена</button></div></div>
+    <div id="modal-factory" class="modal-backdrop"><div class="modal-content"><h3 id="mf-title">Завод</h3><div style="font-size:13px; margin-bottom:15px; color:#666;" id="mf-req"></div><button class="btn blue" id="mf-btn" onclick="startFactory()">Пуск</button><br><br><button class="btn" onclick="closeModal('modal-factory')">Отмена</button></div></div>
 
-    <script>
-        const tg = window.Telegram.WebApp; tg.expand();
+    <script>
+        const tg = window.Telegram.WebApp; tg.expand();
 
-        const EMOJI = { wheat:'🌾', tomato:'🍅', corn:'🌽', strawberry:'🍓', egg:'🥚', milk:'🥛', truffle:'🥩', bread:'🍞', cheese:'🧀', cake:'🎂' };
-        const ITEM_NAMES_RU = { wheat: 'Пшеница', tomato: 'Томат', corn: 'Кукуруза', strawberry: 'Клубника', egg: 'Яйца', milk: 'Молоко', truffle: 'Свининка', bread: 'Хлеб', cheese: 'Сыр', cake: 'Торт' };
-        const CROPS = { wheat: { time: 10000, lvl: 1 }, tomato: { time: 20000, lvl: 2 }, corn: { time: 40000, lvl: 4 }, strawberry: { time: 60000, lvl: 5 } };
-        const ANIMALS = { chicken: { w: '🐔', r: '🥚', item: 'egg', time: 30000 }, cow: { w: '🐄', r: '🥛', item: 'milk', time: 60000 }, pig: { w: '🐖', r: '🥩', item: 'truffle', time: 120000 } };
-        const FACTORIES = {
-            bakery: { emoji: '🍞', product: 'bread', time: 30000, req: {wheat: 2}, name: "Пекарня" },
-            dairy: { emoji: '🧀', product: 'cheese', time: 60000, req: {milk: 2}, name: "Молокозавод" },
-            cakeOven: { emoji: '🎂', product: 'cake', time: 120000, req: {wheat: 1, egg: 1, strawberry: 1}, name: "Кондитерская" }
-        };
-        const ITEMS_DATA = { wheat: {base: 3}, tomato: {base: 8}, corn: {base: 20}, strawberry: {base: 35}, egg: {base: 15}, milk: {base: 50}, truffle: {base: 150}, bread: {base: 25}, cheese: {base: 120}, cake: {base: 200} };
+        const EMOJI = { wheat:'🌾', tomato:'🍅', corn:'🌽', strawberry:'🍓', egg:'🥚', milk:'🥛', truffle:'🥩', bread:'🍞', cheese:'🧀', cake:'🎂' };
+        const ITEM_NAMES_RU = { wheat: 'Пшеница', tomato: 'Томат', corn: 'Кукуруза', strawberry: 'Клубника', egg: 'Яйца', milk: 'Молоко', truffle: 'Свининка', bread: 'Хлеб', cheese: 'Сыр', cake: 'Торт' };
+        const CROPS = { wheat: { time: 10000, lvl: 1 }, tomato: { time: 20000, lvl: 2 }, corn: { time: 40000, lvl: 4 }, strawberry: { time: 60000, lvl: 5 } };
+        const ANIMALS = { chicken: { w: '🐔', r: '🥚', item: 'egg', time: 30000 }, cow: { w: '🐄', r: '🥛', item: 'milk', time: 60000 }, pig: { w: '🐖', r: '🥩', item: 'truffle', time: 120000 } };
+        const FACTORIES = {
+            bakery: { emoji: '🍞', product: 'bread', time: 30000, req: {wheat: 2}, name: "Пекарня" },
+            dairy: { emoji: '🧀', product: 'cheese', time: 60000, req: {milk: 2}, name: "Молокозавод" },
+            cakeOven: { emoji: '🎂', product: 'cake', time: 120000, req: {wheat: 1, egg: 1, strawberry: 1}, name: "Кондитерская" }
+        };
+        const ITEMS_DATA = { wheat: {base: 3}, tomato: {base: 8}, corn: {base: 20}, strawberry: {base: 35}, egg: {base: 15}, milk: {base: 50}, truffle: {base: 150}, bread: {base: 25}, cheese: {base: 120}, cake: {base: 200} };
 
-        const DEFAULT_STATE = {
-            level: 1, xp: 0, coins: 150, 
-            inventory: { wheat:0, tomato:0, corn:0, strawberry:0, egg:0, milk:0, truffle:0, bread:0, cheese:0, cake:0, fertilizer: 2 },
-            pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null})),
-            animals: [], factories: [], orders: [],
-            upgrades: { house: false, tractor: false, greenhouse: false, artur: false },
-            lastFed: Date.now(),
-            lastSave: Date.now()
-        };
+        // ВОТ СЮДА ВПИШИ СВОИ ФРАЗЫ В КАВЫЧКАХ ЧЕРЕЗ ЗАПЯТУЮ
+        const loveMessages = [
+            "У тебя все получится, твоя ферма лучшая! ❤️",
+            "Ты очень сильно стараешься, ферма превосходная! ✨",
+            "Мой умничка, за такую красоту целовать и целовать тебя 😘",
+            "Моё сердце любит тебя и оно не подводит! 🍅❤️",
+            "Тебя целовать — это лучшее ощущение 😘"
+        ];
 
-        let game = DEFAULT_STATE;
-        let lastCloudSaveTime = 0;
-        let activePotIndex = null;
-        let activeFactoryIndex = null;
+        const DEFAULT_STATE = {
+            level: 1, xp: 0, coins: 150, 
+            inventory: { wheat:0, tomato:0, corn:0, strawberry:0, egg:0, milk:0, truffle:0, bread:0, cheese:0, cake:0, fertilizer: 2 },
+            pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null})),
+            animals: [], factories: [], orders: [],
+            upgrades: { house: false, tractor: false, greenhouse: false, artur: false },
+            lastFed: Date.now(),
+            lastSave: Date.now()
+        };
 
-        function initGame() {
-            tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => {
-                let loadedData = null;
-                if (!err && value) { try { loadedData = JSON.parse(value); } catch(e) {} }
-                if (!loadedData) { try { loadedData = JSON.parse(localStorage.getItem('olya_farm_local')); } catch(e) {} }
-                if (loadedData) {
-                    game.level = loadedData.level || 1;
-                    game.xp = loadedData.xp || 0;
-                    game.coins = loadedData.coins || 150;
-                    game.inventory = { ...game.inventory, ...loadedData.inventory };
-                    game.pots = loadedData.pots || game.pots;
-                    game.animals = loadedData.animals || game.animals;
-                    game.factories = loadedData.factories || [];
-                    game.orders = loadedData.orders || [];
-                    game.upgrades = { ...game.upgrades, ...loadedData.upgrades };
-                    game.lastFed = loadedData.lastFed || Date.now();
-                    game.lastSave = loadedData.lastSave || Date.now();
-                }
-                if(game.orders.length === 0) { for(let i=0; i<3; i++) game.orders.push(generateOrder()); }
-                document.getElementById('loader').style.display = 'none';
-                render(); setInterval(gameLoop, 1000);
-            });
-        }
+        let game = DEFAULT_STATE;
+        let lastCloudSaveTime = 0;
+        let activePotIndex = null;
+        let activeFactoryIndex = null;
 
-        document.addEventListener('visibilitychange', () => { if (document.hidden) save(true); });
+        function initGame() {
+            tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => {
+                let loadedData = null;
+                if (!err && value) { try { loadedData = JSON.parse(value); } catch(e) {} }
+                if (!loadedData) { try { loadedData = JSON.parse(localStorage.getItem('olya_farm_local')); } catch(e) {} }
+                if (loadedData) {
+                    game.level = loadedData.level || 1;
+                    game.xp = loadedData.xp || 0;
+                    game.coins = loadedData.coins || 150;
+                    game.inventory = { ...game.inventory, ...loadedData.inventory };
+                    game.pots = loadedData.pots || game.pots;
+                    game.animals = loadedData.animals || game.animals;
+                    game.factories = loadedData.factories || [];
+                    game.orders = loadedData.orders || [];
+                    game.upgrades = { ...game.upgrades, ...loadedData.upgrades };
+                    game.lastFed = loadedData.lastFed || Date.now();
+                    game.lastSave = loadedData.lastSave || Date.now();
+                }
+                if(game.orders.length === 0) { for(let i=0; i<3; i++) game.orders.push(generateOrder()); }
+                document.getElementById('loader').style.display = 'none';
+                render(); setInterval(gameLoop, 1000);
+            });
+        }
 
-        function save(forceCloud = false) { 
-            game.lastSave = Date.now();
-            const dataStr = JSON.stringify(game);
-            localStorage.setItem('olya_farm_local', dataStr);
-            if (forceCloud || (Date.now() - lastCloudSaveTime > 5000)) {
-                tg.CloudStorage.setItem('olya_farm_cloud', dataStr); lastCloudSaveTime = Date.now();
-            }
-            render(); 
-        }
+        document.addEventListener('visibilitychange', () => { if (document.hidden) save(true); });
 
-        // КОРМЁЖКА
-        function isArturHungry() { return Date.now() - game.lastFed > 14400000; } // 4 часа
-        function isTractorActive() { return game.upgrades.tractor && game.upgrades.tractor > Date.now(); }
-        function isGreenhouseActive() { return game.upgrades.greenhouse && game.upgrades.greenhouse > Date.now(); }
-        
-        function feedArtur(type) {
-            game.lastFed = Date.now();
-            let msg = "Ммм, вкусно! 💪 Артур снова в строю и готов пахать!";
-            if(type === 'love') msg = "Это было слаще любого торта! ❤️ Теперь я горы сверну ради тебя!";
-            tg.HapticFeedback.notificationOccurred('success');
-            document.getElementById('modal-letter-text').innerText = msg;
-            document.getElementById('modal-icon').innerText = '💪';
-            document.getElementById('modal-letter').style.display = 'flex';
-            save(true);
-        }
+        function save(forceCloud = false) { 
+            game.lastSave = Date.now();
+            const dataStr = JSON.stringify(game);
+            localStorage.setItem('olya_farm_local', dataStr);
+            if (forceCloud || (Date.now() - lastCloudSaveTime > 5000)) {
+                tg.CloudStorage.setItem('olya_farm_cloud', dataStr); lastCloudSaveTime = Date.now();
+            }
+            render(); 
+        }
 
-        function processOfflineProgress() {
-            const now = Date.now(); const elapsedMs = now - game.lastSave;
-            const secondsPassed = Math.floor(elapsedMs / 1000);
-            if (secondsPassed < 60) return;
-            let earnedCoins = 0; let itemsHarvested = 0;
-            let speedMod = isGreenhouseActive() ? 2 : 1;
-            
-            // Бонусы Артура работают только если он не голоден
-            let hungry = (now - game.lastFed) > 14400000;
-            if (!hungry) {
-                if (game.upgrades.house) earnedCoins += Math.floor(secondsPassed / 10);
-                if (game.upgrades.artur) earnedCoins += secondsPassed;
-            }
-            
-            if (isTractorActive()) {
-                game.pots.forEach(p => { if (p.crop) { let cycles = Math.floor(elapsedMs / (CROPS[p.crop].time / speedMod)); if (cycles > 0) { game.inventory[p.crop] += cycles; itemsHarvested += cycles; p.time = now; } } });
-                game.animals.forEach(a => { let cycles = Math.floor(elapsedMs / (ANIMALS[a.type].time / speedMod)); if (cycles > 0) { game.inventory[ANIMALS[a.type].item] += cycles; itemsHarvested += cycles; a.time = now; } });
-            }
-            game.coins += earnedCoins;
-            save(true);
-        }
+        // КОРМЁЖКА
+        function isArturHungry() { return Date.now() - game.lastFed > 14400000; } // 4 часа
+        function isTractorActive() { return game.upgrades.tractor && game.upgrades.tractor > Date.now(); }
+        function isGreenhouseActive() { return game.upgrades.greenhouse && game.upgrades.greenhouse > Date.now(); }
+        
+        function feedArtur(type) {
+            game.lastFed = Date.now();
+            let msg = "Ммм, вкусно! 💪 Артур снова в строю и готов пахать!";
+            if(type === 'love') msg = "Это было слаще любого торта! ❤️ Теперь я горы сверну ради тебя!";
+            tg.HapticFeedback.notificationOccurred('success');
+            document.getElementById('modal-letter-text').innerText = msg;
+            document.getElementById('modal-icon').innerText = '💪';
+            document.getElementById('modal-letter').style.display = 'flex';
+            save(true);
+        }
 
-        // HAY DAY LOGIC
-        function getXpMax() { return game.level * 100; }
-        function addXp(amount) {
-            game.xp += amount;
-            while (game.xp >= getXpMax()) { game.xp -= getXpMax(); game.level++; tg.HapticFeedback.notificationOccurred('success'); }
-            save(true);
-        }
+        function processOfflineProgress() {
+            const now = Date.now(); const elapsedMs = now - game.lastSave;
+            const secondsPassed = Math.floor(elapsedMs / 1000);
+            if (secondsPassed < 60) return;
+            let earnedCoins = 0; let itemsHarvested = 0;
+            let speedMod = isGreenhouseActive() ? 2 : 1;
+            
+            // Бонусы Артура работают только если он не голоден
+            let hungry = (now - game.lastFed) > 14400000;
+            if (!hungry) {
+                if (game.upgrades.house) earnedCoins += Math.floor(secondsPassed / 10);
+                if (game.upgrades.artur) earnedCoins += secondsPassed;
+            }
+            
+            if (isTractorActive()) {
+                game.pots.forEach(p => { if (p.crop) { let cycles = Math.floor(elapsedMs / (CROPS[p.crop].time / speedMod)); if (cycles > 0) { game.inventory[p.crop] += cycles; itemsHarvested += cycles; p.time = now; } } });
+                game.animals.forEach(a => { let cycles = Math.floor(elapsedMs / (ANIMALS[a.type].time / speedMod)); if (cycles > 0) { game.inventory[ANIMALS[a.type].item] += cycles; itemsHarvested += cycles; a.time = now; } });
+            }
+            game.coins += earnedCoins;
+            save(true);
+        }
 
-        function generateOrder() {
-            const possibleItems = ['wheat'];
-            if(game.level >= 2) possibleItems.push('tomato', 'bread');
-            if(game.level >= 3) possibleItems.push('egg');
-            if(game.level >= 4) possibleItems.push('corn', 'milk', 'cheese');
-            if(game.level >= 5) possibleItems.push('strawberry');
-            if(game.level >= 6) possibleItems.push('cake');
-            if(game.level >= 8) possibleItems.push('truffle');
-            let reqs = {}; let val = 0;
-            for(let i=0; i< (Math.random() < 0.7 ? 1 : 2); i++) {
-                let it = possibleItems[Math.floor(Math.random() * possibleItems.length)];
-                let amt = Math.floor(Math.random() * 3) + 1; reqs[it] = (reqs[it] || 0) + amt; val += ITEMS_DATA[it].base * amt;
-            }
-            let mult = (game.upgrades.artur && !isArturHungny()) ? 2 : 1;
-            return { req: reqs, rewardCoins: Math.floor(val * 1.5 * mult), rewardXp: Math.floor(val * 0.8) + 10 };
-        }
+        // HAY DAY LOGIC
+        function getXpMax() { return game.level * 100; }
+        function addXp(amount) {
+            game.xp += amount;
+            while (game.xp >= getXpMax()) { game.xp -= getXpMax(); game.level++; tg.HapticFeedback.notificationOccurred('success'); }
+            save(true);
+        }
 
-        function fulfillOrder(index) {
-            let o = game.orders[index];
-            for(let i in o.req) if(game.inventory[i] < o.req[i]) return;
-            for(let i in o.req) game.inventory[i] -= o.req[i];
-            game.coins += o.rewardCoins; addXp(o.rewardXp);
-            game.orders[index] = generateOrder(); save(true);
-        }
+        function generateOrder() {
+            const possibleItems = ['wheat'];
+            if(game.level >= 2) possibleItems.push('tomato', 'bread');
+            if(game.level >= 3) possibleItems.push('egg');
+            if(game.level >= 4) possibleItems.push('corn', 'milk', 'cheese');
+            if(game.level >= 5) possibleItems.push('strawberry');
+            if(game.level >= 6) possibleItems.push('cake');
+            if(game.level >= 8) possibleItems.push('truffle');
+            let reqs = {}; let val = 0;
+            for(let i=0; i< (Math.random() < 0.7 ? 1 : 2); i++) {
+                let it = possibleItems[Math.floor(Math.random() * possibleItems.length)];
+                let amt = Math.floor(Math.random() * 3) + 1; reqs[it] = (reqs[it] || 0) + amt; val += ITEMS_DATA[it].base * amt;
+            }
+            let mult = (game.upgrades.artur && !isArturHungry()) ? 2 : 1;
+            return { req: reqs, rewardCoins: Math.floor(val * 1.5 * mult), rewardXp: Math.floor(val * 0.8) + 10 };
+        }
 
-        function buildUpgrade(type, price, dur = 0) {
-            if (game.coins >= price) {
-                if (dur > 0) { let cur = game.upgrades[type] > Date.now() ? game.upgrades[type] : Date.now(); game.upgrades[type] = cur + dur; }
-                else if (!game.upgrades[type]) game.upgrades[type] = true; else return;
-                game.coins -= price; save(true);
-            }
-        }
+        function fulfillOrder(index) {
+            let o = game.orders[index];
+            for(let i in o.req) if(game.inventory[i] < o.req[i]) return;
+            for(let i in o.req) game.inventory[i] -= o.req[i];
+            game.coins += o.rewardCoins; addXp(o.rewardXp);
+            game.orders[index] = generateOrder(); save(true);
+        }
 
-        function donateCharity() { if(game.coins >= 1000) { game.coins -= 1000; document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя помощь — это лучший протеин."; document.getElementById('modal-icon').innerText = '🏥'; document.getElementById('modal-letter').style.display = 'flex'; save(true); } }
+        function buildUpgrade(type, price, dur = 0) {
+            if (game.coins >= price) {
+                if (dur > 0) { let cur = game.upgrades[type] > Date.now() ? game.upgrades[type] : Date.now(); game.upgrades[type] = cur + dur; }
+                else if (!game.upgrades[type]) game.upgrades[type] = true; else return;
+                game.coins -= price; save(true);
+            }
+        }
 
-        function render() {
-            document.getElementById('coins-display').innerText = game.coins;
-            document.getElementById('lvl-display').innerText = game.level;
-            document.getElementById('xp-display').innerText = game.xp;
-            document.getElementById('xp-max').innerText = getXpMax();
-            document.getElementById('xp-fill').style.width = (game.xp / getXpMax() * 100) + '%';
-            
-            // Склад
-            let invH = '';
-            for(let i in ITEMS_DATA) if(game.inventory[i] > 0 || game.level < 2) invH += `<div class="card"><span>${EMOJI[i]} ${ITEM_NAMES_RU[i]}: <b>${game.inventory[i]}</b></span><button class="btn" onclick="sellItem('${i}', ${ITEMS_DATA[i].base})">💰</button></div>`;
-            document.getElementById('inventory-list').innerHTML = invH;
+        function donateCharity() { if(game.coins >= 1000) { game.coins -= 1000; document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя помощь — это лучший протеин."; document.getElementById('modal-icon').innerText = '🏥'; document.getElementById('modal-letter').style.display = 'flex'; save(true); } }
 
-            // Кухня UI
-            let hungry = isArturHungry();
-            let statusTag = document.getElementById('hunger-status');
-            let arturEmoji = document.getElementById('artur-status-emoji');
-            if(hungry) {
-                statusTag.innerText = "Голодный (Бонусы OFF)";
-                statusTag.className = "status-tag tag-hungry";
-                arturEmoji.innerText = "😫";
-                document.getElementById('hunger-timer').innerText = "Артур хочет кушать!";
-            } else {
-                statusTag.innerText = "Сытый и мощный (Бонусы ON)";
-                statusTag.className = "status-tag tag-fed";
-                arturEmoji.innerText = "💪";
-                let diff = 14400000 - (Date.now() - game.lastFed);
-                let h = Math.floor(diff/3600000); let m = Math.floor((diff%3600000)/60000); let s = Math.floor((diff%60000)/1000);
-                document.getElementById('hunger-timer').innerText = `До следующей кормёжки: ${h}ч ${m}м ${s}с`;
-            }
+        function render() {
+            document.getElementById('coins-display').innerText = game.coins;
+            document.getElementById('lvl-display').innerText = game.level;
+            document.getElementById('xp-display').innerText = game.xp;
+            document.getElementById('xp-max').innerText = getXpMax();
+            document.getElementById('xp-fill').style.width = (game.xp / getXpMax() * 100) + '%';
+            
+            // Склад
+            let invH = '';
+            for(let i in ITEMS_DATA) if(game.inventory[i] > 0 || game.level < 2) invH += `<div class="card"><span>${EMOJI[i]} ${ITEM_NAMES_RU[i]}: <b>${game.inventory[i]}</b></span><button class="btn" onclick="sellItem('${i}', ${ITEMS_DATA[i].base})">💰</button></div>`;
+            document.getElementById('inventory-list').innerHTML = invH;
 
-            // Усадьба
-            let hCard = document.getElementById('house-card');
-            if(game.upgrades.house) hH = '🏡 Палатка: <b>Построено</b>'; else hH = '⛺ Палатка (300 🪙)';
-            hCard.innerHTML = `<div>${hH}</div><button class="btn blue" ${game.upgrades.house?'disabled':''} onclick="buildUpgrade('house', 300)">${game.upgrades.house?'✅':'Купить'}</button>`;
-            
-            let tActive = isTractorActive();
-            document.getElementById('tractor-card').innerHTML = `<div>🚜 Трактор (${tActive ? Math.ceil((game.upgrades.tractor-Date.now())/60000)+'м' : '1ч'})</div><button class="btn blue" onclick="buildUpgrade('tractor', 500, 3600000)">${tActive?'Продлить':'500 🪙'}</button>`;
+            // Кухня UI
+            let hungry = isArturHungry();
+            let statusTag = document.getElementById('hunger-status');
+            let arturEmoji = document.getElementById('artur-status-emoji');
+            if(hungry) {
+                statusTag.innerText = "Голодный (Бонусы OFF)";
+                statusTag.className = "status-tag tag-hungry";
+                arturEmoji.innerText = "😫";
+                document.getElementById('hunger-timer').innerText = "Артур хочет кушать!";
+            } else {
+                statusTag.innerText = "Сытый и мощный (Бонусы ON)";
+                statusTag.className = "status-tag tag-fed";
+                arturEmoji.innerText = "💪";
+                let diff = 14400000 - (Date.now() - game.lastFed);
+                let h = Math.floor(diff/3600000); let m = Math.floor((diff%3600000)/60000); let s = Math.floor((diff%60000)/1000);
+                document.getElementById('hunger-timer').innerText = `До следующей кормёжки: ${h}ч ${m}м ${s}с`;
+            }
 
-            let aActive = game.upgrades.artur;
-            document.getElementById('artur-card').innerHTML = `<div>🧍‍♂️ Артур (${aActive?'На смене':'15к 🪙'})</div><button class="btn gold" ${aActive?'disabled':''} onclick="buildUpgrade('artur', 15000)">${aActive?'✅':'Вызвать'}</button>`;
+            // Усадьба
+            let hCard = document.getElementById('house-card');
+            if(game.upgrades.house) hH = '🏡 Палатка: <b>Построено</b>'; else hH = '⛺ Палатка (300 🪙)';
+            hCard.innerHTML = `<div>${hH}</div><button class="btn blue" ${game.upgrades.house?'disabled':''} onclick="buildUpgrade('house', 300)">${game.upgrades.house?'✅':'Купить'}</button>`;
+            
+            let tActive = isTractorActive();
+            document.getElementById('tractor-card').innerHTML = `<div>🚜 Трактор (${tActive ? Math.ceil((game.upgrades.tractor-Date.now())/60000)+'м' : '1ч'})</div><button class="btn blue" onclick="buildUpgrade('tractor', 500, 3600000)">${tActive?'Продлить':'500 🪙'}</button>`;
 
-            // Поля и Животные
-            const fGrid = document.getElementById('farm-grid'); fGrid.innerHTML = '';
-            game.pots.forEach((p, i) => {
-                const s = document.createElement('div'); s.className = 'slot';
-                if(p.state === 'empty') s.innerText = '🟫'; else if(p.state === 'growing') { s.innerText = '🌱'; s.innerHTML += '<div class="timer"></div>'; } else s.innerText = EMOJI[p.crop];
-                s.onclick = () => { if(p.state === 'empty') { activePotIndex = i; document.getElementById('modal-seeds').style.display = 'flex'; } else if(p.state === 'ready') { p.state = 'empty'; game.inventory[p.crop]++; addXp(1); save(true); } };
-                fGrid.appendChild(s);
-            });
+            let aActive = game.upgrades.artur;
+            document.getElementById('artur-card').innerHTML = `<div>🧍‍♂️ Артур (${aActive?'На смене':'15к 🪙'})</div><button class="btn gold" ${aActive?'disabled':''} onclick="buildUpgrade('artur', 15000)">${aActive?'✅':'Вызвать'}</button>`;
 
-            // Заказы
-            let oG = document.getElementById('orders-container'); oG.innerHTML = '';
-            game.orders.forEach((o, i) => {
-                let can = true; let rH = ''; for(let it in o.req) { if(game.inventory[it]<o.req[it]) can=false; rH+=`<span>${EMOJI[it]} ${game.inventory[it]}/${o.req[it]}</span> `; }
-                oG.innerHTML += `<div class="card" style="flex-direction:column; align-items:flex-start;"><b>Доставка:</b><div style="margin:5px 0;">${rH}</div><div style="width:100%; display:flex; justify-content:space-between;"><span>🪙 ${o.rewardCoins} ⭐ ${o.rewardXp}</span><button class="btn" ${can?'':'disabled'} onclick="fulfillOrder(${i})">Отдать</button></div></div>`;
-            });
-        }
+            // Поля и Животные
+            const fGrid = document.getElementById('farm-grid'); fGrid.innerHTML = '';
+            game.pots.forEach((p, i) => {
+                const s = document.createElement('div'); s.className = 'slot';
+                if(p.state === 'empty') s.innerText = '🟫'; else if(p.state === 'growing') { s.innerText = '🌱'; s.innerHTML += '<div class="timer"></div>'; } else s.innerText = EMOJI[p.crop];
+                s.onclick = () => { if(p.state === 'empty') { activePotIndex = i; document.getElementById('modal-seeds').style.display = 'flex'; } else if(p.state === 'ready') { p.state = 'empty'; game.inventory[p.crop]++; addXp(1); save(true); } };
+                fGrid.appendChild(s);
+            });
 
-        function gameLoop() {
-            const now = Date.now(); let needsSave = false; let speedMod = isGreenhouseActive() ? 2 : 1; const sec = Math.floor(now / 1000);
-            let hungry = (now - game.lastFed) > 14400000;
+            // Заказы
+            let oG = document.getElementById('orders-container'); oG.innerHTML = '';
+            game.orders.forEach((o, i) => {
+                let can = true; let rH = ''; for(let it in o.req) { if(game.inventory[it]<o.req[it]) can=false; rH+=`<span>${EMOJI[it]} ${game.inventory[it]}/${o.req[it]}</span> `; }
+                oG.innerHTML += `<div class="card" style="flex-direction:column; align-items:flex-start;"><b>Доставка:</b><div style="margin:5px 0;">${rH}</div><div style="width:100%; display:flex; justify-content:space-between;"><span>🪙 ${o.rewardCoins} ⭐ ${o.rewardXp}</span><button class="btn" ${can?'':'disabled'} onclick="fulfillOrder(${i})">Отдать</button></div></div>`;
+            });
+        }
 
-            if (!hungry) {
-                if (game.upgrades.house && sec % 10 === 0 && !window.lastH) { game.coins += 1; needsSave = true; window.lastH = sec; } else if (sec % 10 !== 0) window.lastH = null;
-                if (game.upgrades.artur && sec !== window.lastA) { game.coins += 1; needsSave = true; window.lastA = sec; }
-            }
+        function gameLoop() {
+            const now = Date.now(); let needsSave = false; let speedMod = isGreenhouseActive() ? 2 : 1; const sec = Math.floor(now / 1000);
+            let hungry = (now - game.lastFed) > 14400000;
 
-            game.pots.forEach(p => { if(p.state === 'growing' && p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) { p.state = 'ready'; needsSave = true; } });
-            game.animals.forEach(a => { if(a.state === 'working' && now - a.time >= (ANIMALS[a.type].time / speedMod)) { a.state = 'ready'; needsSave = true; } });
-            game.factories.forEach(f => { if(f.state === 'working' && now - f.time >= FACTORIES[f.id].time) { f.state = 'ready'; needsSave = true; } });
+            if (!hungry) {
+                if (game.upgrades.house && sec % 10 === 0 && !window.lastH) { game.coins += 1; needsSave = true; window.lastH = sec; } else if (sec % 10 !== 0) window.lastH = null;
+                if (game.upgrades.artur && sec !== window.lastA) { game.coins += 1; needsSave = true; window.lastA = sec; }
+            }
 
-            if (isTractorActive()) {
-                game.pots.forEach(p => { if (p.state === 'ready') { p.state = 'growing'; p.time = Date.now(); game.inventory[p.crop]++; addXp(1); needsSave = true; } });
-                game.animals.forEach(a => { if (a.state === 'ready') { a.state = 'working'; a.time = Date.now(); game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true; } });
-            }
-            if (needsSave) save(); else render();
-        }
+            game.pots.forEach(p => { if(p.state === 'growing' && p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) { p.state = 'ready'; needsSave = true; } });
+            game.animals.forEach(a => { if(a.state === 'working' && now - a.time >= (ANIMALS[a.type].time / speedMod)) { a.state = 'ready'; needsSave = true; } });
+            game.factories.forEach(f => { if(f.state === 'working' && now - f.time >= FACTORIES[f.id].time) { f.state = 'ready'; needsSave = true; } });
 
-        // Общие функции
-        function switchTab(t) { document.querySelectorAll('.view, .nav-btn').forEach(e => e.classList.remove('active')); document.getElementById('view-'+t).classList.add('active'); event.currentTarget.classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function buyFertilizer() { if(game.coins >= 20) { game.coins -= 20; game.inventory.fertilizer++; save(true); } }
-        function buyPot() { if (game.coins >= 30) { game.coins -= 30; game.pots.push({state: 'empty', crop: null, time: null}); save(true); } }
-        function buildFactory(id, p, l) { if(game.level >= l && game.coins >= p && !game.factories.find(f => f.id === id)) { game.coins -= p; game.factories.push({id: id, state: 'idle', time: null}); save(true); } }
-        function buyAnimal(t, p, l) { if (game.level >= l && game.coins >= p) { game.coins -= p; game.animals.push({type: t, state: 'working', time: Date.now()}); save(true); } }
-        function plantSeed(c, l) { if(game.level < l) return; closeModal('modal-seeds'); let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = c; p.time = Date.now(); save(true); }
-        function sellItem(i, b) { if (game.inventory[i] > 0) { game.inventory[i]--; let mult = (game.upgrades.artur && !isArturHungry()) ? 2 : 1; game.coins += b * mult; save(true); } }
-        function buyMessage() { if (game.coins >= 20) { game.coins -= 20; document.getElementById('modal-letter-text').innerText = loveMessages[Math.floor(Math.random() * loveMessages.length)]; document.getElementById('modal-letter').style.display = 'flex'; save(true); } }
+            if (isTractorActive()) {
+                game.pots.forEach(p => { if (p.state === 'ready') { p.state = 'growing'; p.time = Date.now(); game.inventory[p.crop]++; addXp(1); needsSave = true; } });
+                game.animals.forEach(a => { if (a.state === 'ready') { a.state = 'working'; a.time = Date.now(); game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true; } });
+            }
+            if (needsSave) save(); else render();
+        }
 
-        initGame();
-    </script>
+        // Общие функции
+        function switchTab(t) { document.querySelectorAll('.view, .nav-btn').forEach(e => e.classList.remove('active')); document.getElementById('view-'+t).classList.add('active'); event.currentTarget.classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function buyFertilizer() { if(game.coins >= 20) { game.coins -= 20; game.inventory.fertilizer++; save(true); } }
+        function buyPot() { if (game.coins >= 30) { game.coins -= 30; game.pots.push({state: 'empty', crop: null, time: null}); save(true); } }
+        function buildFactory(id, p, l) { if(game.level >= l && game.coins >= p && !game.factories.find(f => f.id === id)) { game.coins -= p; game.factories.push({id: id, state: 'idle', time: null}); save(true); } }
+        function buyAnimal(t, p, l) { if (game.level >= l && game.coins >= p) { game.coins -= p; game.animals.push({type: t, state: 'working', time: Date.now()}); save(true); } }
+        function plantSeed(c, l) { if(game.level < l) return; closeModal('modal-seeds'); let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = c; p.time = Date.now(); save(true); }
+        function sellItem(i, b) { if (game.inventory[i] > 0) { game.inventory[i]--; let mult = (game.upgrades.artur && !isArturHungry()) ? 2 : 1; game.coins += b * mult; save(true); } }
+        function buyMessage() { if (game.coins >= 20) { game.coins -= 20; document.getElementById('modal-letter-text').innerText = loveMessages[Math.floor(Math.random() * loveMessages.length)]; document.getElementById('modal-letter').style.display = 'flex'; save(true); } }
+
+        initGame();
+    </script>
 </body>
 </html>
