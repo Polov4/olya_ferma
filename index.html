@@ -162,7 +162,7 @@
             <div class="card" style="display:block;text-align:center; border: 2px solid #f1c40f;" id="artur-card"></div>
             
             <h3 style="margin-top:20px">Добрые дела ❤️</h3>
-            <div class="card" style="border: 2px solid #e74c3c;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь любимому бро</small></div><button class="btn red" onclick="donateCharity('heal')">100000 🪙</button></div>
+            <div class="card" style="border: 2px solid #e74c3c;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь своему любимому</small></div><button class="btn red" onclick="donateCharity('heal')">100000 🪙</button></div>
             <div class="card" style="border: 2px solid #34495e;"><div>🎸 <b>Билет на Metallica</b><br><small>Заплатить за билет Артуру</small></div><button class="btn" style="background:#2c3e50" onclick="donateCharity('ticket')">100000 🪙</button></div>
             <div class="card" style="border: 2px solid #9b59b6;"><div>💿 <b>Новые CD диски</b><br><small>Заплатить на новые диски для Артура</small></div><button class="btn purple" onclick="donateCharity('cd')">100000 🪙</button></div>
         </div>
@@ -506,8 +506,8 @@
             if(game.coins >= 100000) {
                 game.coins -= 100000;
                 if(type === 'heal') document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя поддержка это лучшее исцеление.";
-                if(type === 'ticket') document.getElementById('modal-letter-text').innerText = "Артур счастлив! Билет на Metallica куплен 🎸🤘";
-                if(type === 'cd') document.getElementById('modal-letter-text').innerText = "Новые CD диски для Артура уже в пути! 💿🔥";
+                if(type === 'ticket') document.getElementById('modal-letter-text').innerText = "Артур рад! Билет на дедов куплен 🎸";
+                if(type === 'cd') document.getElementById('modal-letter-text').innerText = "Новые альбомы для Артура уже в пути! 💿";
                 
                 document.getElementById('modal-icon').innerText = type === 'heal' ? '🏥' : (type === 'ticket' ? '🎸' : '💿');
                 document.getElementById('modal-letter').style.display = 'flex';
