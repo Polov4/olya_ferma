@@ -48,13 +48,13 @@
         .order-req div { background: white; padding: 5px 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .order-reward { color: var(--primary); font-weight: bold; font-size: 16px; width: 100%; display: flex; justify-content: space-between; align-items: center;}
         
-        .btn { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; min-width: 90px; box-shadow: 0 3px 0 #c2185b; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; min-width: 90px; box-shadow: 0 3px 0 #c2185b; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
         .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #c2185b; }
         .btn.orange { background: var(--accent); box-shadow: 0 3px 0 #f50057;}
         .btn.blue { background: #64b5f6; box-shadow: 0 3px 0 #1e88e5; }
         .btn.gold { background: #ffd54f; color: #5d4037; box-shadow: 0 3px 0 #fbc02d; }
         .btn.red { background: #ff8a80; box-shadow: 0 3px 0 #e57373; }
-        .btn:disabled { background: #f5f5f5; color: #bdbdbd; box-shadow: none; }
+        .btn:disabled { background: #f5f5f5; color: #bdbdbd; box-shadow: none; cursor: not-allowed;}
 
         .status-tag { padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .tag-fed { background: #e8f5e9; color: #4caf50; }
@@ -126,12 +126,12 @@
         </div>
 
         <div id="view-farm" class="view">
-            <div class="card" style="margin-bottom:10px; justify-content:center;">✨ Удобрения: <b id="fert-count" style="margin-left:5px">0</b></div>
+            <div class="card" style="margin-bottom:10px; justify-content:center;">✨ Быстрые удобрения: <b id="fert-count" style="margin-left:5px">0</b></div>
             <div class="grid" id="farm-grid"></div>
         </div>
         
         <div id="view-animals" class="view">
-            <div class="card" style="margin-bottom:10px; justify-content:center;">✨ Удобрения: <b id="fert-count2" style="margin-left:5px">0</b></div>
+            <div class="card" style="margin-bottom:10px; justify-content:center;">✨ Быстрые удобрения: <b id="fert-count2" style="margin-left:5px">0</b></div>
             <div class="grid" id="animal-grid"></div>
         </div>
 
@@ -148,25 +148,37 @@
             <h3 style="margin-top:0">Глобальные стройки 🏗</h3>
             <div class="card" style="display:block;text-align:center;" id="house-card"></div>
             <div class="card" style="display:block;text-align:center;" id="tractor-card"></div>
-            <div class="card" style="display:block;text-align:center;" id="greenhouse-card"></div>
             <div class="card" style="display:block;text-align:center;" id="farmer-card"></div>
+            <div class="card" style="display:block;text-align:center;" id="autowater-card"></div>
+            <div class="card" style="display:block;text-align:center;" id="greenhouse-card"></div>
+            <div class="card" style="display:block;text-align:center;" id="super-fert-card"></div>
             <div class="card" style="display:block;text-align:center; border: 2px solid #f1c40f;" id="artur-card"></div>
             
             <h3 style="margin-top:20px">Добрые дела ❤️</h3>
-            <div class="card" style="border: 2px solid #e74c3c;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь любимому бро</small></div><button class="btn red" onclick="donateCharity()">10000 🪙</button></div>
+            <div class="card" style="border: 2px solid #e74c3c;"><div>🏥 <b>На лечение Артура</b><br><small>Помощь любимому бро</small></div><button class="btn red" onclick="donateCharity('heal')">100000 🪙</button></div>
+            <div class="card" style="border: 2px solid #34495e;"><div>🎸 <b>Билет на Metallica</b><br><small>Заплатить за билет Артуру</small></div><button class="btn" style="background:#2c3e50" onclick="donateCharity('ticket')">100000 🪙</button></div>
+            <div class="card" style="border: 2px solid #9b59b6;"><div>💿 <b>Новые CD диски</b><br><small>Заплатить на новые диски для Артура</small></div><button class="btn purple" onclick="donateCharity('cd')">100000 🪙</button></div>
         </div>
 
         <div id="view-market" class="view">
             <h3 style="margin-top:0">Склад 📦</h3>
             <div id="inventory-list"></div>
-            <h3>Покупка для фермы ✨</h3>
-            <div class="card" style="border: 2px solid #9b59b6;"><div>✨ <b>Удобрение</b></div><button class="btn purple" onclick="buyFertilizer()">20 🪙</button></div>
-            <div class="card"><div>🟫 <b>Грядка</b></div><button class="btn" onclick="buyPot()">70 🪙</button></div>
+            
+            <h3 style="margin-top:20px">Покупка для фермы ✨</h3>
+            <div class="card" style="border: 2px solid #9b59b6;"><div>✨ <b>Удобрение (Мгновенное)</b></div><button class="btn purple" onclick="buyFertilizer()">20 🪙</button></div>
+            <div class="card"><div>🟫 <b>Грядка</b></div><button class="btn" onclick="buyPot()" id="btn-pot">70 🪙</button></div>
+            
+            <h3 style="margin-top:20px">Животные 🐄</h3>
             <div class="card"><div>🐔 <b>Курица</b> (Ур. 3)</div><button class="btn" onclick="buyAnimal('chicken', 50, 3)" id="btn-chicken">50 🪙</button></div>
             <div class="card"><div>🐄 <b>Корова</b> (Ур. 4)</div><button class="btn" onclick="buyAnimal('cow', 200, 4)" id="btn-cow">200 🪙</button></div>
             <div class="card"><div>🐖 <b>Свинья</b> (Ур. 8)</div><button class="btn" onclick="buyAnimal('pig', 500, 8)" id="btn-pig">500 🪙</button></div>
             
-            <h3>Письма ❤️</h3>
+            <h3 style="margin-top:20px">Загоны для животных 🏡</h3>
+            <div class="card"><div>🐔 <b>Загон для кур</b><br><small>+6 мест</small></div><button class="btn" onclick="buyPen('chicken')">1500 🪙</button></div>
+            <div class="card"><div>🐄 <b>Загон для коров</b><br><small>+6 мест</small></div><button class="btn" onclick="buyPen('cow')">2500 🪙</button></div>
+            <div class="card"><div>🐖 <b>Загон для свиней</b><br><small>+6 мест</small></div><button class="btn" onclick="buyPen('pig')">5000 🪙</button></div>
+            
+            <h3 style="margin-top:20px">Письма ❤️</h3>
             <div class="card" style="border: 2px solid #ff7043;"><div>💌 <b>Любовь Артура</b></div><button class="btn orange" onclick="buyMessage()">100 🪙</button></div>
         </div>
     </div>
@@ -221,10 +233,12 @@
         const DEFAULT_STATE = {
             level: 1, xp: 0, coins: 150, 
             inventory: { wheat:0, tomato:0, corn:0, strawberry:0, egg:0, milk:0, truffle:0, bread:0, cheese:0, cake:0, fertilizer: 2 },
-            pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null})),
+            pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null, waterExpires: 0, pausedAt: null})),
             animals: [], factories: [], orders: [],
-            upgrades: { house: false, artur: false },
-            tractors: [], greenhouses: [], farmers: [],
+            upgrades: { house: false, artur: false, fastGrowth: false },
+            tractors: [], autowaters: [], farmers: [],
+            greenhouseCount: 0,
+            pens: { chicken: 0, cow: 0, pig: 0 },
             lastFed: Date.now(),
             lastSave: Date.now()
         };
@@ -247,12 +261,8 @@
                 try { localData = JSON.parse(localStorage.getItem('olya_farm_local')); } catch(e) {}
                 
                 let loadedData = null;
-                
-                if (cloudData && localData) {
-                    loadedData = (cloudData.lastSave > localData.lastSave) ? cloudData : localData;
-                } else {
-                    loadedData = cloudData || localData;
-                }
+                if (cloudData && localData) { loadedData = (cloudData.lastSave > localData.lastSave) ? cloudData : localData; } 
+                else { loadedData = cloudData || localData; }
                 
                 if (loadedData) {
                     game.level = loadedData.level || 1;
@@ -263,28 +273,16 @@
                     game.animals = loadedData.animals || game.animals;
                     game.factories = loadedData.factories || [];
                     game.orders = loadedData.orders || [];
-                    
-                    if (loadedData.upgrades) {
-                        game.upgrades = { ...game.upgrades, ...loadedData.upgrades };
-                    }
+                    if (loadedData.upgrades) game.upgrades = { ...game.upgrades, ...loadedData.upgrades };
                     
                     game.tractors = loadedData.tractors || [];
-                    game.greenhouses = loadedData.greenhouses || [];
+                    game.autowaters = loadedData.autowaters || [];
                     game.farmers = loadedData.farmers || [];
+                    game.greenhouseCount = loadedData.greenhouseCount || 0;
+                    game.pens = loadedData.pens || { chicken: 0, cow: 0, pig: 0 };
 
-                    // Перенос старых сохранений (апгрейд трактора/теплицы в массивы)
-                    if (game.upgrades.tractor !== undefined && game.upgrades.tractor !== false) {
-                        if (typeof game.upgrades.tractor === 'number' && game.upgrades.tractor > Date.now()) {
-                            game.tractors.push({ expires: game.upgrades.tractor });
-                        }
-                        delete game.upgrades.tractor;
-                    }
-                    if (game.upgrades.greenhouse !== undefined && game.upgrades.greenhouse !== false) {
-                        if (typeof game.upgrades.greenhouse === 'number' && game.upgrades.greenhouse > Date.now()) {
-                            game.greenhouses.push({ expires: game.upgrades.greenhouse });
-                        }
-                        delete game.upgrades.greenhouse;
-                    }
+                    // Migration for pots to have watering system
+                    game.pots.forEach(p => { if (p.waterExpires === undefined) p.waterExpires = 0; });
 
                     game.lastFed = loadedData.lastFed || Date.now();
                     game.lastSave = loadedData.lastSave || Date.now();
@@ -298,9 +296,7 @@
             };
 
             if (tg.CloudStorage && tg.CloudStorage.getItem) {
-                try { 
-                    tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => { startGame(err ? null : value); });
-                } catch(e) { startGame(null); }
+                try { tg.CloudStorage.getItem('olya_farm_cloud', (err, value) => { startGame(err ? null : value); }); } catch(e) { startGame(null); }
             }
             setTimeout(() => { startGame(null); }, 1500);
         }
@@ -310,18 +306,19 @@
         function save(forceCloud = false) { 
             game.lastSave = Date.now();
             const dataStr = JSON.stringify(game);
-            
             localStorage.setItem('olya_farm_local', dataStr);
-            
             if (tg.CloudStorage && tg.CloudStorage.setItem) {
                 if (forceCloud || (Date.now() - lastCloudSaveTime > 10000)) {
-                    try {
-                        tg.CloudStorage.setItem('olya_farm_cloud', dataStr); 
-                        lastCloudSaveTime = Date.now();
-                    } catch(e) {}
+                    try { tg.CloudStorage.setItem('olya_farm_cloud', dataStr); lastCloudSaveTime = Date.now(); } catch(e) {}
                 }
             }
             render(); 
+        }
+
+        function formatTime(ms) {
+            if(ms <= 0) return "00:00:00";
+            let h = Math.floor(ms / 3600000); let m = Math.floor((ms % 3600000) / 60000); let s = Math.floor((ms % 60000) / 1000);
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         }
 
         function isArturHungry() { return Date.now() - game.lastFed > 14400000; } // 4 часа
@@ -342,16 +339,14 @@
             const secondsPassed = Math.floor(elapsedMs / 1000);
             if (secondsPassed < 60) return;
             
-            let earnedCoins = 0; let itemsHarvested = 0;
-            let hungry = isArturHungry();
+            let earnedCoins = 0; let itemsHarvested = 0; let hungry = isArturHungry();
             
-            // Очистка и получение актуальных лимитов
             game.tractors = game.tractors.filter(t => t.expires > now);
-            game.greenhouses = game.greenhouses.filter(g => g.expires > now);
+            game.autowaters = game.autowaters.filter(aw => aw.expires > now);
             game.farmers = game.farmers.filter(f => f.expires > now);
             
             let activeTractors = game.tractors.length;
-            let activeGreenhouses = game.greenhouses.length;
+            let activeAutowaters = game.autowaters.length;
             let activeFarmers = game.farmers.length;
             let animalCap = (activeFarmers * 2) + ((!hungry && game.upgrades.artur) ? 20 : 0);
             
@@ -360,43 +355,47 @@
                 if (game.upgrades.artur) earnedCoins += secondsPassed;
             }
             
-            // Поля (Трактор больше не трогает животных, только теплицы и трактора для полей)
             game.pots.forEach((p, i) => {
-                if (p.crop && p.state === 'growing') {
-                    let speedMod = (i < activeGreenhouses * 8) ? 2 : 1;
+                if (p.crop && (p.state === 'growing' || p.state === 'thirsty')) {
+                    let speedMod = (i < 40 && game.upgrades.fastGrowth) ? 2 : 1;
+                    let isAutoWatered = i < activeAutowaters * 8;
+                    let waterRemaining = isAutoWatered ? elapsedMs : Math.max(0, p.waterExpires - game.lastSave);
+                    
                     if (i < activeTractors * 8) {
-                        let cycles = Math.floor(elapsedMs / (CROPS[p.crop].time / speedMod));
+                        let workingTime = Math.min(elapsedMs, waterRemaining);
+                        let cycles = Math.floor(workingTime / (CROPS[p.crop].time / speedMod));
                         if (cycles > 0) { 
                             game.inventory[p.crop] += cycles; 
                             itemsHarvested += cycles; 
                             p.time = now; 
-                        } else if (elapsedMs >= CROPS[p.crop].time / speedMod) {
+                            if (!isAutoWatered && elapsedMs > waterRemaining) { p.state = 'thirsty'; p.pausedAt = now; } 
+                            else p.state = 'growing';
+                        } else if (workingTime >= CROPS[p.crop].time / speedMod) {
                             p.state = 'ready';
+                        } else if (!isAutoWatered && elapsedMs > waterRemaining) {
+                            p.state = 'thirsty'; p.pausedAt = now;
                         }
                     } else {
-                        if (elapsedMs >= CROPS[p.crop].time / speedMod) {
-                            p.state = 'ready';
+                        let neededTime = (CROPS[p.crop].time / speedMod) - (game.lastSave - p.time);
+                        if (p.state === 'thirsty') neededTime = (CROPS[p.crop].time / speedMod) - (p.pausedAt - p.time);
+                        
+                        if (waterRemaining >= neededTime) { p.state = 'ready'; } 
+                        else {
+                            p.state = 'thirsty';
+                            if (!p.pausedAt) p.pausedAt = game.lastSave + waterRemaining;
                         }
                     }
                 }
             });
             
-            // Животные (Фермеры и Артур)
             game.animals.forEach((a, i) => {
                 if (a.state === 'working') {
                     if (i < animalCap) {
                         let cycles = Math.floor(elapsedMs / ANIMALS[a.type].time);
-                        if (cycles > 0) { 
-                            game.inventory[ANIMALS[a.type].item] += cycles; 
-                            itemsHarvested += cycles; 
-                            a.time = now; 
-                        } else if (elapsedMs >= ANIMALS[a.type].time) {
-                            a.state = 'ready';
-                        }
+                        if (cycles > 0) { game.inventory[ANIMALS[a.type].item] += cycles; itemsHarvested += cycles; a.time = now; } 
+                        else if (elapsedMs >= ANIMALS[a.type].time) a.state = 'ready';
                     } else {
-                        if (elapsedMs >= ANIMALS[a.type].time) {
-                            a.state = 'ready';
-                        }
+                        if (elapsedMs >= ANIMALS[a.type].time) a.state = 'ready';
                     }
                 }
             });
@@ -411,7 +410,6 @@
         }
 
         function getXpMax() { return game.level * 100; }
-        
         function addXp(amount) {
             game.xp += amount; let leveledUp = false;
             while (game.xp >= getXpMax()) { game.xp -= getXpMax(); game.level++; leveledUp = true; }
@@ -451,49 +449,61 @@
             tg.HapticFeedback.notificationOccurred('success');
             game.orders[index] = generateOrder(); save(true);
         }
-
         function deleteOrder(index) { game.orders[index] = generateOrder(); save(true); }
 
-        function donateCharity() {
-            if(game.coins >= 10000) {
-                game.coins -= 10000;
-                document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя поддержка это лучшее исцеление.";
-                document.getElementById('modal-icon').innerText = '🏥';
+        function donateCharity(type) {
+            if(game.coins >= 100000) {
+                game.coins -= 100000;
+                if(type === 'heal') document.getElementById('modal-letter-text').innerText = "Артур восстановил силы! ❤️ Твоя поддержка это лучшее исцеление.";
+                if(type === 'ticket') document.getElementById('modal-letter-text').innerText = "Артур счастлив! Билет на Metallica куплен 🎸🤘";
+                if(type === 'cd') document.getElementById('modal-letter-text').innerText = "Новые CD диски для Артура уже в пути! 💿🔥";
+                
+                document.getElementById('modal-icon').innerText = type === 'heal' ? '🏥' : (type === 'ticket' ? '🎸' : '💿');
                 document.getElementById('modal-letter').style.display = 'flex';
                 save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
 
         function buyTractor() {
-            let price = 500 * game.level;
-            if (game.coins >= price) {
-                game.coins -= price;
-                game.tractors.push({ expires: Date.now() + 3600000 }); // 1 час
+            if (game.coins >= 1500) {
+                game.coins -= 1500; game.tractors.push({ expires: Date.now() + 14400000 }); // 4 часа
+                tg.HapticFeedback.notificationOccurred('success'); save(true);
+            } else tg.HapticFeedback.notificationOccurred('error');
+        }
+        
+        function buyAutoWater() {
+            if (game.coins >= 3000) {
+                game.coins -= 3000; game.autowaters.push({ expires: Date.now() + 14400000 }); // 4 часа
                 tg.HapticFeedback.notificationOccurred('success'); save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
 
         function buyGreenhouse() {
-            let price = 1500 * game.level;
+            let price = 10000 + (game.level * 1000);
             if (game.coins >= price) {
-                game.coins -= price;
-                game.greenhouses.push({ expires: Date.now() + 36000000 }); // 10 часов
+                game.coins -= price; game.greenhouseCount = (game.greenhouseCount || 0) + 1;
                 tg.HapticFeedback.notificationOccurred('success'); save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
 
         function buyFarmer() {
-            let price = 300;
-            if (game.coins >= price) {
-                game.coins -= price;
-                game.farmers.push({ expires: Date.now() + 3600000 }); // 1 час
+            if (game.coins >= 900) {
+                game.coins -= 900; game.farmers.push({ expires: Date.now() + 14400000 }); // 4 часа
+                tg.HapticFeedback.notificationOccurred('success'); save(true);
+            } else tg.HapticFeedback.notificationOccurred('error');
+        }
+        
+        function buyPen(type) {
+            let prices = { chicken: 1500, cow: 2500, pig: 5000 };
+            if (game.coins >= prices[type]) {
+                game.coins -= prices[type]; game.pens[type]++;
                 tg.HapticFeedback.notificationOccurred('success'); save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
 
         function buildUpgrade(type, price) {
-            if (game.coins >= price) {
-                if (!game.upgrades[type]) { game.upgrades[type] = true; game.coins -= price; tg.HapticFeedback.notificationOccurred('success'); save(true); }
+            if (game.coins >= price && !game.upgrades[type]) {
+                game.upgrades[type] = true; game.coins -= price; tg.HapticFeedback.notificationOccurred('success'); save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
 
@@ -509,8 +519,7 @@
             let reqStr = "Нужно для " + info.emoji + ":<br>"; let canBuild = true;
             for(let item in info.req) {
                 let has = game.inventory[item] || 0; let need = info.req[item];
-                if(has < need) canBuild = false;
-                reqStr += `${EMOJI[item]} ${has}/${need}<br>`;
+                if(has < need) canBuild = false; reqStr += `${EMOJI[item]} ${has}/${need}<br>`;
             }
             document.getElementById('mf-req').innerHTML = reqStr;
             document.getElementById('mf-btn').disabled = !canBuild;
@@ -520,8 +529,7 @@
         function startFactory() {
             let f = game.factories[activeFactoryIndex]; let info = FACTORIES[f.id];
             for(let item in info.req) game.inventory[item] -= info.req[item];
-            f.state = 'working'; f.time = Date.now();
-            closeModal('modal-factory'); save(true);
+            f.state = 'working'; f.time = Date.now(); closeModal('modal-factory'); save(true);
         }
 
         function switchTab(tabId) { document.querySelectorAll('.view, .nav-btn').forEach(el => el.classList.remove('active')); document.getElementById('view-' + tabId).classList.add('active'); event.currentTarget.classList.add('active'); }
@@ -529,32 +537,54 @@
         
         function buyMessage() { 
             if (game.coins >= 100) { 
-                game.coins -= 100; 
-                document.getElementById('modal-letter-text').innerText = loveMessages[Math.floor(Math.random() * loveMessages.length)]; 
-                document.getElementById('modal-icon').innerText = '💌'; 
-                document.getElementById('modal-letter').style.display = 'flex'; 
-                save(true); 
+                game.coins -= 100; document.getElementById('modal-letter-text').innerText = loveMessages[Math.floor(Math.random() * loveMessages.length)]; 
+                document.getElementById('modal-icon').innerText = '💌'; document.getElementById('modal-letter').style.display = 'flex'; save(true); 
             } else tg.HapticFeedback.notificationOccurred('error');
         }
 
         function openSeedModal(index) { activePotIndex = index; document.getElementById('modal-seeds').style.display = 'flex'; }
-        function plantSeed(cropName, lvlReq) { if(game.level < lvlReq) return; closeModal('modal-seeds'); let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = cropName; p.time = Date.now(); save(true); }
+        
+        function plantSeed(cropName, lvlReq) { 
+            if(game.level < lvlReq) return; 
+            closeModal('modal-seeds'); 
+            let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = cropName; p.time = Date.now(); 
+            p.waterExpires = Date.now() + 14400000; // Полив на 4 часа при посадке
+            save(true); 
+        }
         
         function sellItem(item, basePrice, sellAll = false) { 
             let count = sellAll ? game.inventory[item] : 1;
             if (count > 0) { 
                 game.inventory[item] -= count; 
                 let mult = (game.upgrades.artur && !isArturHungry()) ? 2 : 1;
-                game.coins += (basePrice * count) * mult; 
+                // Идеально точная математика для оптовой продажи:
+                let revenue = (basePrice * mult) * count;
+                game.coins += revenue; 
                 save(true); 
             } 
         }
         
         function buyFertilizer() { if(game.coins >= 20) { game.coins -= 20; game.inventory.fertilizer++; save(true); } }
-        function buyAnimal(type, price, lvlReq) { if (game.level >= lvlReq && game.coins >= price) { game.coins -= price; game.animals.push({type: type, state: 'working', time: Date.now()}); save(true); } }
-        function buyPot() { if (game.coins >= 70) { game.coins -= 70; game.pots.push({state: 'empty', crop: null, time: null}); save(true); } }
+        
+        function buyAnimal(type, price, lvlReq) { 
+            let c = game.animals.filter(a=>a.type===type).length;
+            let m = (game.pens[type] || 0) * 6;
+            if (c >= m) { tg.HapticFeedback.notificationOccurred('error'); return; }
+            if (game.level >= lvlReq && game.coins >= price) { 
+                game.coins -= price; game.animals.push({type: type, state: 'working', time: Date.now()}); save(true); 
+            } 
+        }
+        
+        function buyPot() { 
+            let m = 4 + (game.greenhouseCount * 8);
+            if (game.pots.length >= m) { tg.HapticFeedback.notificationOccurred('error'); return; }
+            if (game.coins >= 70) { 
+                game.coins -= 70; game.pots.push({state: 'empty', crop: null, time: null, waterExpires: 0, pausedAt: null}); save(true); 
+            } 
+        }
 
         function render() {
+            let now = Date.now();
             document.getElementById('coins-display').innerText = game.coins;
             document.getElementById('lvl-display').innerText = game.level;
             document.getElementById('xp-display').innerText = game.xp;
@@ -565,9 +595,22 @@
 
             ['tomato', 'corn', 'strawberry'].forEach(c => { let btn = document.getElementById('seed-'+c); if(game.level >= CROPS[c].lvl) btn.classList.remove('locked'); else btn.classList.add('locked'); });
             
-            document.getElementById('btn-chicken').disabled = game.level < 3 || game.coins < 50;
-            document.getElementById('btn-cow').disabled = game.level < 4 || game.coins < 200;
-            document.getElementById('btn-pig').disabled = game.level < 8 || game.coins < 500;
+            let potMax = 4 + (game.greenhouseCount * 8);
+            document.getElementById('btn-pot').innerHTML = `70 🪙<br><small style="font-size:10px">(${game.pots.length}/${potMax})</small>`;
+            document.getElementById('btn-pot').disabled = game.coins < 70 || game.pots.length >= potMax;
+            
+            let cMax = game.pens.chicken * 6; let cowMax = game.pens.cow * 6; let pMax = game.pens.pig * 6;
+            let cCount = game.animals.filter(a=>a.type==='chicken').length;
+            let cowCount = game.animals.filter(a=>a.type==='cow').length;
+            let pCount = game.animals.filter(a=>a.type==='pig').length;
+            
+            document.getElementById('btn-chicken').innerHTML = `50 🪙<br><small style="font-size:10px">(${cCount}/${cMax})</small>`;
+            document.getElementById('btn-cow').innerHTML = `200 🪙<br><small style="font-size:10px">(${cowCount}/${cowMax})</small>`;
+            document.getElementById('btn-pig').innerHTML = `500 🪙<br><small style="font-size:10px">(${pCount}/${pMax})</small>`;
+            
+            document.getElementById('btn-chicken').disabled = game.level < 3 || game.coins < 50 || cCount >= cMax;
+            document.getElementById('btn-cow').disabled = game.level < 4 || game.coins < 200 || cowCount >= cowMax;
+            document.getElementById('btn-pig').disabled = game.level < 8 || game.coins < 500 || pCount >= pMax;
             
             document.getElementById('btn-bakery').disabled = game.level < 2 || game.coins < 100 || game.factories.find(f=>f.id==='bakery');
             document.getElementById('btn-dairy').disabled = game.level < 4 || game.coins < 300 || game.factories.find(f=>f.id==='dairy');
@@ -576,7 +619,6 @@
             if(game.factories.find(f=>f.id==='dairy')) document.getElementById('btn-dairy').innerText = "Куплено";
             if(game.factories.find(f=>f.id==='cakeOven')) document.getElementById('btn-cake').innerText = "Куплено";
 
-            // Рендер Склада с новыми кнопками "Всё"
             let invHTML = '';
             for(let item in ITEMS_DATA) {
                 if(game.inventory[item] > 0 || (item !== 'bread' && item !== 'cheese' && item !== 'cake')) {
@@ -596,33 +638,38 @@
             let arturEmoji = document.getElementById('artur-status-emoji');
             
             if(hungry) {
-                statusTag.innerText = "Голодный (Бонусы OFF)";
-                statusTag.className = "status-tag tag-hungry";
-                arturEmoji.innerText = "😫";
-                document.getElementById('hunger-timer').innerText = "Артур хочет кушать!";
+                statusTag.innerText = "Голодный (Бонусы OFF)"; statusTag.className = "status-tag tag-hungry";
+                arturEmoji.innerText = "😫"; document.getElementById('hunger-timer').innerText = "Артур хочет кушать!";
             } else {
-                statusTag.innerText = "Сытый и мощный (Бонусы ON)";
-                statusTag.className = "status-tag tag-fed";
+                statusTag.innerText = "Сытый и мощный (Бонусы ON)"; statusTag.className = "status-tag tag-fed";
                 arturEmoji.innerText = "💪";
-                let diff = 14400000 - (Date.now() - game.lastFed);
-                let h = Math.floor(diff / 3600000); let m = Math.floor((diff % 3600000) / 60000); let s = Math.floor((diff % 60000) / 1000);
-                document.getElementById('hunger-timer').innerText = `Снова захочу кушать через: ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                let diff = 14400000 - (now - game.lastFed);
+                document.getElementById('hunger-timer').innerText = `Снова захочу кушать через: ${formatTime(diff)}`;
             }
 
-            // Рендер Усадьбы
             if (game.upgrades.house) document.getElementById('house-card').innerHTML = '<div style="font-size:40px">⛺</div><b>Палатка</b><br><small>Приносит +1 🪙/10 сек</small><br><br><button class="btn blue" disabled>Построено</button>';
             else document.getElementById('house-card').innerHTML = '<div style="font-size:40px">⛺</div><b>Палатка</b><br><small>Приносит +1 🪙/10 сек</small><br><br><button class="btn blue" onclick="buildUpgrade(\'house\', 300)">Дом (300 🪙)</button>';
             
-            let tPrice = 500 * game.level;
-            let tCount = game.tractors.length;
-            document.getElementById('tractor-card').innerHTML = `<div style="font-size:40px">🚜</div><b>Трактор</b><br><small>Активных: ${tCount} (на ${tCount*8} гр.)<br>Автосбор полей (1 час)</small><br><br><button class="btn blue" onclick="buyTractor()">Купить (${tPrice} 🪙)</button>`;
+            let tCount = game.tractors.length; let maxT = Math.max(0, ...game.tractors.map(t=>t.expires));
+            let tTimer = maxT > now ? formatTime(maxT - now) : "";
+            document.getElementById('tractor-card').innerHTML = `<div style="font-size:40px">🚜</div><b>Трактор</b><br><small>Активных: ${tCount} (на ${tCount*8} гр.)<br>Автосбор полей (4 часа)<br><span id="txt-timer-t">${tTimer ? '⏳ ' + tTimer : ''}</span></small><br><br><button class="btn blue" onclick="buyTractor()">Аренда (1500 🪙)</button>`;
 
-            let gPrice = 1500 * game.level;
-            let gCount = game.greenhouses.length;
-            document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>Активных: ${gCount} (на ${gCount*8} гр.)<br>Рост x2 (10 часов)</small><br><br><button class="btn blue" onclick="buyGreenhouse()">Купить (${gPrice} 🪙)</button>`;
+            let awCount = game.autowaters.length; let maxAW = Math.max(0, ...game.autowaters.map(a=>a.expires));
+            let awTimer = maxAW > now ? formatTime(maxAW - now) : "";
+            document.getElementById('autowater-card').innerHTML = `<div style="font-size:40px">🚿</div><b>Автополив</b><br><small>Активных: ${awCount} (на ${awCount*8} гр.)<br>Сам поливает рассаду (4 часа)<br><span id="txt-timer-aw">${awTimer ? '⏳ ' + awTimer : ''}</span></small><br><br><button class="btn blue" onclick="buyAutoWater()">Аренда (3000 🪙)</button>`;
 
-            let fCount = game.farmers.length;
-            document.getElementById('farmer-card').innerHTML = `<div style="font-size:40px">👨‍🌾</div><b>Фермер</b><br><small>Активных: ${fCount} (на ${fCount*2} жив.)<br>Автосбор животных (1 час)</small><br><br><button class="btn blue" onclick="buyFarmer()">Купить (300 🪙)</button>`;
+            let gPrice = 10000 + (game.level * 1000);
+            document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>Построено: ${game.greenhouseCount}<br>Дает +8 мест для грядок навсегда</small><br><br><button class="btn blue" onclick="buyGreenhouse()">Купить (${gPrice} 🪙)</button>`;
+
+            if(game.upgrades.fastGrowth) {
+                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🧪</div><b>Супер-Удобрение</b><br><small>Рост x2 на 40 грядках</small><br><br><button class="btn blue" disabled>Куплено</button>`;
+            } else {
+                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🧪</div><b>Супер-Удобрение</b><br><small>Рост x2 на 40 грядках навсегда</small><br><br><button class="btn blue" onclick="buildUpgrade('fastGrowth', 80000)">Купить (80000 🪙)</button>`;
+            }
+
+            let fCount = game.farmers.length; let maxF = Math.max(0, ...game.farmers.map(f=>f.expires));
+            let fTimer = maxF > now ? formatTime(maxF - now) : "";
+            document.getElementById('farmer-card').innerHTML = `<div style="font-size:40px">👨‍🌾</div><b>Фермер</b><br><small>Активных: ${fCount} (на ${fCount*2} жив.)<br>Автосбор животных (4 часа)<br><span id="txt-timer-f">${fTimer ? '⏳ ' + fTimer : ''}</span></small><br><br><button class="btn blue" onclick="buyFarmer()">Аренда (900 🪙)</button>`;
 
             if (game.upgrades.artur) document.getElementById('artur-card').innerHTML = '<div style="font-size:40px">🧍‍♂️</div><b>Артур Пашет</b><br><small>+1 🪙/сек, Цены x2, 20 животных</small><br><br><button class="btn gold" disabled>Вызван навсегда</button>';
             else document.getElementById('artur-card').innerHTML = '<div style="font-size:40px">🧍‍♂️</div><b>Вызвать Артура</b><br><small>+1 🪙/сек, Цены x2, уход за 20 жив.</small><br><br><button class="btn gold" onclick="buildUpgrade(\'artur\', 20000)">Вызвать (20000 🪙)</button>';
@@ -642,10 +689,35 @@
             });
 
             const fGrid = document.getElementById('farm-grid'); fGrid.innerHTML = '';
+            let activeAutowaters = game.autowaters.length;
             game.pots.forEach((p, i) => {
                 const s = document.createElement('div'); s.className = 'slot';
-                if(p.state === 'empty') s.innerText = '🟫'; else if(p.state === 'growing') { s.innerText = '🌱'; s.innerHTML += '<div class="timer"></div>'; } else s.innerText = EMOJI[p.crop];
-                s.onclick = () => { if(p.state === 'empty') { activePotIndex = i; document.getElementById('modal-seeds').style.display = 'flex'; } else if(p.state === 'growing' && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; p.state = 'ready'; save(true); } else if(p.state === 'ready') { p.state = 'empty'; game.inventory[p.crop]++; addXp(1); save(true); } };
+                
+                let isAutoWatered = i < activeAutowaters * 8;
+                let needsWater = !isAutoWatered && p.waterExpires < now;
+
+                if (needsWater && p.state !== 'empty') {
+                    s.innerText = '💧'; s.style.background = '#85c1e9'; s.style.boxShadow = '0 5px 0 #3498db';
+                    s.onclick = () => {
+                        p.waterExpires = Date.now() + 14400000;
+                        if(p.state === 'thirsty') {
+                            p.state = 'growing';
+                            if(p.pausedAt) { p.time += (Date.now() - p.pausedAt); p.pausedAt = null; }
+                        }
+                        save(true);
+                    };
+                } else {
+                    if(p.state === 'empty') s.innerText = '🟫'; 
+                    else if(p.state === 'growing') { s.innerText = '🌱'; s.innerHTML += '<div class="timer"></div>'; } 
+                    else if(p.state === 'thirsty') { s.innerText = '💧'; s.style.background = '#85c1e9'; s.style.boxShadow = '0 5px 0 #3498db'; } // fallback
+                    else s.innerText = EMOJI[p.crop];
+                    
+                    s.onclick = () => { 
+                        if(p.state === 'empty') { activePotIndex = i; document.getElementById('modal-seeds').style.display = 'flex'; } 
+                        else if(p.state === 'growing' && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; p.state = 'ready'; save(true); } 
+                        else if(p.state === 'ready') { p.state = 'empty'; game.inventory[p.crop]++; addXp(1); save(true); } 
+                    };
+                }
                 fGrid.appendChild(s);
             });
 
@@ -678,13 +750,21 @@
             let hungry = isArturHungry();
 
             game.tractors = game.tractors.filter(t => t.expires > now);
-            game.greenhouses = game.greenhouses.filter(g => g.expires > now);
+            game.autowaters = game.autowaters.filter(aw => aw.expires > now);
             game.farmers = game.farmers.filter(f => f.expires > now);
             
             let activeTractors = game.tractors.length;
-            let activeGreenhouses = game.greenhouses.length;
+            let activeAutowaters = game.autowaters.length;
             let activeFarmers = game.farmers.length;
             let animalCap = (activeFarmers * 2) + ((!hungry && game.upgrades.artur) ? 20 : 0);
+
+            // Визуальное обновление таймеров карточек
+            let txtT = document.getElementById('txt-timer-t');
+            if(txtT) { let maxT = Math.max(0, ...game.tractors.map(t=>t.expires)); txtT.innerText = maxT > now ? '⏳ ' + formatTime(maxT - now) : ''; }
+            let txtF = document.getElementById('txt-timer-f');
+            if(txtF) { let maxF = Math.max(0, ...game.farmers.map(f=>f.expires)); txtF.innerText = maxF > now ? '⏳ ' + formatTime(maxF - now) : ''; }
+            let txtAW = document.getElementById('txt-timer-aw');
+            if(txtAW) { let maxAW = Math.max(0, ...game.autowaters.map(aw=>aw.expires)); txtAW.innerText = maxAW > now ? '⏳ ' + formatTime(maxAW - now) : ''; }
 
             if (!hungry) {
                 if (game.upgrades.house && sec % 10 === 0 && !window.lastH) { game.coins += 1; needsSave = true; window.lastH = sec; } else if (sec % 10 !== 0) window.lastH = null;
@@ -692,9 +772,16 @@
             }
             
             game.pots.forEach((p, i) => {
-                let speedMod = (i < activeGreenhouses * 8) ? 2 : 1;
-                if (p.state === 'growing' && p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) {
-                    p.state = 'ready'; needsSave = true;
+                let speedMod = (i < 40 && game.upgrades.fastGrowth) ? 2 : 1;
+                let isAutoWatered = i < activeAutowaters * 8;
+                let hasWater = isAutoWatered || p.waterExpires >= now;
+
+                if (p.state === 'growing') {
+                    if (!hasWater) {
+                        p.state = 'thirsty'; p.pausedAt = now; needsSave = true;
+                    } else if (p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) {
+                        p.state = 'ready'; needsSave = true;
+                    }
                 }
                 if (p.state === 'ready' && i < activeTractors * 8) {
                     p.state = 'growing'; p.time = now; game.inventory[p.crop]++; addXp(1); needsSave = true;
@@ -702,17 +789,13 @@
             });
 
             game.animals.forEach((a, i) => {
-                if (a.state === 'working' && now - a.time >= ANIMALS[a.type].time) {
-                    a.state = 'ready'; needsSave = true;
-                }
-                if (a.state === 'ready' && i < animalCap) {
-                    a.state = 'working'; a.time = now; game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true;
-                }
+                if (a.state === 'working' && now - a.time >= ANIMALS[a.type].time) { a.state = 'ready'; needsSave = true; }
+                if (a.state === 'ready' && i < animalCap) { a.state = 'working'; a.time = now; game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true; }
             });
 
             game.factories.forEach(f => { if(f.state === 'working' && now - f.time >= FACTORIES[f.id].time) { f.state = 'ready'; needsSave = true; } });
             
-            if (needsSave) save(); else render(); 
+            if (needsSave) save(); 
         }
         
         initGame();
