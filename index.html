@@ -55,6 +55,7 @@
         .btn.gold { background: #ffd54f; color: #5d4037; box-shadow: 0 3px 0 #fbc02d; }
         .btn.red { background: #ff8a80; box-shadow: 0 3px 0 #e57373; }
         .btn:disabled { background: #f5f5f5; color: #bdbdbd; box-shadow: none; cursor: not-allowed;}
+        .btn.purple { background: #ab47bc; box-shadow: 0 3px 0 #7b1fa2; }
 
         .status-tag { padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .tag-fed { background: #e8f5e9; color: #4caf50; }
@@ -126,12 +127,18 @@
         </div>
 
         <div id="view-farm" class="view">
-            <div class="card" style="margin-bottom:10px; justify-content:center;">✨ Быстрые удобрения: <b id="fert-count" style="margin-left:5px">0</b></div>
+            <div class="card" style="margin-bottom:10px; justify-content:space-between; display:flex; align-items: center;">
+                <div style="font-size: 14px;">✨ Удобрения: <b id="fert-count">0</b></div>
+                <div style="font-size: 14px; background:#fff0f6; padding: 5px 10px; border-radius: 10px;">🟫 Всего грядок: <b id="total-pots-display">0/4</b></div>
+            </div>
             <div class="grid" id="farm-grid"></div>
         </div>
         
         <div id="view-animals" class="view">
-            <div class="card" style="margin-bottom:10px; justify-content:center;">✨ Быстрые удобрения: <b id="fert-count2" style="margin-left:5px">0</b></div>
+            <div class="card" style="margin-bottom:10px; justify-content:space-between; display:flex; align-items: center;">
+                <div style="font-size: 14px;">✨ Удобрения: <b id="fert-count2">0</b></div>
+                <div style="font-size: 14px; background:#fff0f6; padding: 5px 10px; border-radius: 10px;">🐄 Всего животных: <b id="total-animals-display">0/0</b></div>
+            </div>
             <div class="grid" id="animal-grid"></div>
         </div>
 
@@ -165,7 +172,14 @@
             <div id="inventory-list"></div>
             
             <h3 style="margin-top:20px">Покупка для фермы ✨</h3>
-            <div class="card" style="border: 2px solid #9b59b6;"><div>✨ <b>Удобрение (Мгновенное)</b></div><button class="btn purple" onclick="buyFertilizer()">20 🪙</button></div>
+            <div class="card" style="border: 2px solid #9b59b6; flex-direction:column; align-items: stretch;">
+                <div style="margin-bottom: 10px;">✨ <b>Удобрения (Мгновенный рост)</b><br><small>Для ручного юза или Авто-Комбайна</small></div>
+                <div style="display:flex; justify-content: space-between; gap: 10px;">
+                    <button class="btn purple" style="flex:1" onclick="buyFertilizer(1, 60)">x1 (60 🪙)</button>
+                    <button class="btn purple" style="flex:1" onclick="buyFertilizer(20, 1000)">x20 (1000 🪙)</button>
+                </div>
+            </div>
+
             <div class="card"><div>🟫 <b>Грядка</b></div><button class="btn" onclick="buyPot()" id="btn-pot">70 🪙</button></div>
             
             <h3 style="margin-top:20px">Животные 🐄</h3>
@@ -281,7 +295,6 @@
                     game.greenhouseCount = loadedData.greenhouseCount || 0;
                     game.pens = loadedData.pens || { chicken: 0, cow: 0, pig: 0 };
 
-                    // Migration for pots to have watering system
                     game.pots.forEach(p => { if (p.waterExpires === undefined) p.waterExpires = 0; });
 
                     game.lastFed = loadedData.lastFed || Date.now();
@@ -321,7 +334,7 @@
             return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         }
 
-        function isArturHungry() { return Date.now() - game.lastFed > 14400000; } // 4 часа
+        function isArturHungry() { return Date.now() - game.lastFed > 14400000; }
 
         function feedArtur(type) {
             game.lastFed = Date.now();
@@ -357,7 +370,8 @@
             
             game.pots.forEach((p, i) => {
                 if (p.crop && (p.state === 'growing' || p.state === 'thirsty')) {
-                    let speedMod = (i < 40 && game.upgrades.fastGrowth) ? 2 : 1;
+                    // Скорость 1, так как Комбайн теперь работает через мгновенные удобрения
+                    let speedMod = 1;
                     let isAutoWatered = i < activeAutowaters * 8;
                     let waterRemaining = isAutoWatered ? elapsedMs : Math.max(0, p.waterExpires - game.lastSave);
                     
@@ -466,14 +480,14 @@
 
         function buyTractor() {
             if (game.coins >= 1500) {
-                game.coins -= 1500; game.tractors.push({ expires: Date.now() + 14400000 }); // 4 часа
+                game.coins -= 1500; game.tractors.push({ expires: Date.now() + 14400000 }); 
                 tg.HapticFeedback.notificationOccurred('success'); save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
         
         function buyAutoWater() {
             if (game.coins >= 3000) {
-                game.coins -= 3000; game.autowaters.push({ expires: Date.now() + 14400000 }); // 4 часа
+                game.coins -= 3000; game.autowaters.push({ expires: Date.now() + 14400000 }); 
                 tg.HapticFeedback.notificationOccurred('success'); save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
@@ -488,7 +502,7 @@
 
         function buyFarmer() {
             if (game.coins >= 900) {
-                game.coins -= 900; game.farmers.push({ expires: Date.now() + 14400000 }); // 4 часа
+                game.coins -= 900; game.farmers.push({ expires: Date.now() + 14400000 });
                 tg.HapticFeedback.notificationOccurred('success'); save(true);
             } else tg.HapticFeedback.notificationOccurred('error');
         }
@@ -548,7 +562,7 @@
             if(game.level < lvlReq) return; 
             closeModal('modal-seeds'); 
             let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = cropName; p.time = Date.now(); 
-            p.waterExpires = Date.now() + 14400000; // Полив на 4 часа при посадке
+            p.waterExpires = Date.now() + 14400000; 
             save(true); 
         }
         
@@ -557,14 +571,19 @@
             if (count > 0) { 
                 game.inventory[item] -= count; 
                 let mult = (game.upgrades.artur && !isArturHungry()) ? 2 : 1;
-                // Идеально точная математика для оптовой продажи:
                 let revenue = (basePrice * mult) * count;
                 game.coins += revenue; 
                 save(true); 
             } 
         }
         
-        function buyFertilizer() { if(game.coins >= 20) { game.coins -= 20; game.inventory.fertilizer++; save(true); } }
+        function buyFertilizer(amount, price) { 
+            if(game.coins >= price) { 
+                game.coins -= price; 
+                game.inventory.fertilizer += amount; 
+                save(true); 
+            } else tg.HapticFeedback.notificationOccurred('error');
+        }
         
         function buyAnimal(type, price, lvlReq) { 
             let c = game.animals.filter(a=>a.type===type).length;
@@ -596,10 +615,16 @@
             ['tomato', 'corn', 'strawberry'].forEach(c => { let btn = document.getElementById('seed-'+c); if(game.level >= CROPS[c].lvl) btn.classList.remove('locked'); else btn.classList.add('locked'); });
             
             let potMax = 4 + (game.greenhouseCount * 8);
+            document.getElementById('total-pots-display').innerText = `${game.pots.length}/${potMax}`;
             document.getElementById('btn-pot').innerHTML = `70 🪙<br><small style="font-size:10px">(${game.pots.length}/${potMax})</small>`;
             document.getElementById('btn-pot').disabled = game.coins < 70 || game.pots.length >= potMax;
             
             let cMax = game.pens.chicken * 6; let cowMax = game.pens.cow * 6; let pMax = game.pens.pig * 6;
+            let totalAnimalMax = cMax + cowMax + pMax;
+            let totalAnimals = game.animals.length;
+            
+            document.getElementById('total-animals-display').innerText = `${totalAnimals}/${totalAnimalMax}`;
+            
             let cCount = game.animals.filter(a=>a.type==='chicken').length;
             let cowCount = game.animals.filter(a=>a.type==='cow').length;
             let pCount = game.animals.filter(a=>a.type==='pig').length;
@@ -662,9 +687,9 @@
             document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>Построено: ${game.greenhouseCount}<br>Дает +8 мест для грядок навсегда</small><br><br><button class="btn blue" onclick="buyGreenhouse()">Купить (${gPrice} 🪙)</button>`;
 
             if(game.upgrades.fastGrowth) {
-                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🧪</div><b>Супер-Удобрение</b><br><small>Рост x2 на 40 грядках</small><br><br><button class="btn blue" disabled>Куплено</button>`;
+                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🚜✨</div><b>Комбайн</b><br><small>Автоматически тратит удобрения<br>на 40 грядок каждую секунду</small><br><br><button class="btn blue" disabled>Куплено</button>`;
             } else {
-                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🧪</div><b>Супер-Удобрение</b><br><small>Рост x2 на 40 грядках навсегда</small><br><br><button class="btn blue" onclick="buildUpgrade('fastGrowth', 80000)">Купить (80000 🪙)</button>`;
+                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🚜✨</div><b>Комбайн</b><br><small>Сам тратит удобрения на 40 грядок<br>(Требует покупки удобрений)</small><br><br><button class="btn blue" onclick="buildUpgrade('fastGrowth', 80000)">Купить (80000 🪙)</button>`;
             }
 
             let fCount = game.farmers.length; let maxF = Math.max(0, ...game.farmers.map(f=>f.expires));
@@ -709,7 +734,7 @@
                 } else {
                     if(p.state === 'empty') s.innerText = '🟫'; 
                     else if(p.state === 'growing') { s.innerText = '🌱'; s.innerHTML += '<div class="timer"></div>'; } 
-                    else if(p.state === 'thirsty') { s.innerText = '💧'; s.style.background = '#85c1e9'; s.style.boxShadow = '0 5px 0 #3498db'; } // fallback
+                    else if(p.state === 'thirsty') { s.innerText = '💧'; s.style.background = '#85c1e9'; s.style.boxShadow = '0 5px 0 #3498db'; }
                     else s.innerText = EMOJI[p.crop];
                     
                     s.onclick = () => { 
@@ -758,7 +783,6 @@
             let activeFarmers = game.farmers.length;
             let animalCap = (activeFarmers * 2) + ((!hungry && game.upgrades.artur) ? 20 : 0);
 
-            // Визуальное обновление таймеров карточек
             let txtT = document.getElementById('txt-timer-t');
             if(txtT) { let maxT = Math.max(0, ...game.tractors.map(t=>t.expires)); txtT.innerText = maxT > now ? '⏳ ' + formatTime(maxT - now) : ''; }
             let txtF = document.getElementById('txt-timer-f');
@@ -772,15 +796,22 @@
             }
             
             game.pots.forEach((p, i) => {
-                let speedMod = (i < 40 && game.upgrades.fastGrowth) ? 2 : 1;
                 let isAutoWatered = i < activeAutowaters * 8;
                 let hasWater = isAutoWatered || p.waterExpires >= now;
 
                 if (p.state === 'growing') {
                     if (!hasWater) {
                         p.state = 'thirsty'; p.pausedAt = now; needsSave = true;
-                    } else if (p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) {
-                        p.state = 'ready'; needsSave = true;
+                    } else {
+                        // АВТО-КОМБАЙН С УДОБРЕНИЯМИ (Сжигает 1 удобрение за секунду на грядку)
+                        if (game.upgrades.fastGrowth && i < 40 && game.inventory.fertilizer > 0) {
+                            game.inventory.fertilizer--;
+                            p.state = 'ready';
+                            needsSave = true;
+                        }
+                        else if (p.crop && now - p.time >= CROPS[p.crop].time) {
+                            p.state = 'ready'; needsSave = true;
+                        }
                     }
                 }
                 if (p.state === 'ready' && i < activeTractors * 8) {
