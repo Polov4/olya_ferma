@@ -173,7 +173,7 @@
             
             <h3 style="margin-top:20px">Покупка для фермы ✨</h3>
             <div class="card" style="border: 2px solid #9b59b6; flex-direction:column; align-items: stretch;">
-                <div style="margin-bottom: 10px;">✨ <b>Удобрения (Мгновенный рост)</b><br><small>Для ручного юза или Авто-Комбайна</small></div>
+                <div style="margin-bottom: 10px;">✨ <b>Удобрения (Скорость x2)</b><br><small>Для ручного юза или Авто-Комбайна</small></div>
                 <div style="display:flex; justify-content: space-between; gap: 10px;">
                     <button class="btn purple" style="flex:1" onclick="buyFertilizer(1, 60)">x1 (60 🪙)</button>
                     <button class="btn purple" style="flex:1" onclick="buyFertilizer(20, 1000)">x20 (1000 🪙)</button>
@@ -247,7 +247,7 @@
         const DEFAULT_STATE = {
             level: 1, xp: 0, coins: 150, 
             inventory: { wheat:0, tomato:0, corn:0, strawberry:0, egg:0, milk:0, truffle:0, bread:0, cheese:0, cake:0, fertilizer: 2 },
-            pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null, waterExpires: 0, pausedAt: null})),
+            pots: Array(4).fill().map(() => ({state: 'empty', crop: null, time: null, waterExpires: 0, pausedAt: null, fertilized: false})),
             animals: [], factories: [], orders: [],
             upgrades: { house: false, artur: false, fastGrowth: false },
             tractors: [], autowaters: [], farmers: [],
@@ -295,7 +295,12 @@
                     game.greenhouseCount = loadedData.greenhouseCount || 0;
                     game.pens = loadedData.pens || { chicken: 0, cow: 0, pig: 0 };
 
-                    game.pots.forEach(p => { if (p.waterExpires === undefined) p.waterExpires = 0; });
+                    game.pots.forEach(p => { 
+                        if (p.waterExpires === undefined) p.waterExpires = 0; 
+                        if (p.fertilized === undefined) p.fertilized = false;
+                    });
+                    game.animals.forEach(a => { if (a.fertilized === undefined) a.fertilized = false; });
+                    game.factories.forEach(f => { if (f.fertilized === undefined) f.fertilized = false; });
 
                     game.lastFed = loadedData.lastFed || Date.now();
                     game.lastSave = loadedData.lastSave || Date.now();
@@ -370,26 +375,47 @@
             
             game.pots.forEach((p, i) => {
                 if (p.crop && (p.state === 'growing' || p.state === 'thirsty')) {
-                    // Скорость 1, так как Комбайн теперь работает через мгновенные удобрения
-                    let speedMod = 1;
                     let isAutoWatered = i < activeAutowaters * 8;
                     let waterRemaining = isAutoWatered ? elapsedMs : Math.max(0, p.waterExpires - game.lastSave);
                     
                     if (i < activeTractors * 8) {
-                        let workingTime = Math.min(elapsedMs, waterRemaining);
-                        let cycles = Math.floor(workingTime / (CROPS[p.crop].time / speedMod));
-                        if (cycles > 0) { 
-                            game.inventory[p.crop] += cycles; 
-                            itemsHarvested += cycles; 
-                            p.time = now; 
-                            if (!isAutoWatered && elapsedMs > waterRemaining) { p.state = 'thirsty'; p.pausedAt = now; } 
-                            else p.state = 'growing';
-                        } else if (workingTime >= CROPS[p.crop].time / speedMod) {
-                            p.state = 'ready';
-                        } else if (!isAutoWatered && elapsedMs > waterRemaining) {
-                            p.state = 'thirsty'; p.pausedAt = now;
+                        let timeRemaining = Math.min(elapsedMs, waterRemaining);
+                        let cyclesDone = 0;
+
+                        // Симуляция множественных циклов посадки-сбора с тратой удобрений
+                        while (timeRemaining > 0) {
+                            if (game.upgrades.fastGrowth && i < 40 && !p.fertilized && game.inventory.fertilizer > 0) {
+                                p.fertilized = true;
+                                game.inventory.fertilizer--;
+                            }
+                            let cTime = CROPS[p.crop].time / (p.fertilized ? 2 : 1);
+                            let elapsedInCycle = (cyclesDone === 0) ? (game.lastSave - p.time) : 0;
+                            let timeNeeded = Math.max(0, cTime - elapsedInCycle);
+
+                            if (timeRemaining >= timeNeeded) {
+                                cyclesDone++;
+                                timeRemaining -= timeNeeded;
+                                p.fertilized = false; // Удобрение сбросилось после сбора
+                            } else {
+                                p.time = now - (elapsedInCycle + timeRemaining);
+                                break;
+                            }
                         }
+
+                        if (cyclesDone > 0) { 
+                            game.inventory[p.crop] += cyclesDone; 
+                            itemsHarvested += cyclesDone; 
+                        }
+
+                        if (!isAutoWatered && elapsedMs > waterRemaining) { p.state = 'thirsty'; p.pausedAt = now; } 
+                        else p.state = 'growing';
                     } else {
+                        // Растет без трактора (только 1 цикл)
+                        if (game.upgrades.fastGrowth && i < 40 && !p.fertilized && game.inventory.fertilizer > 0) {
+                            p.fertilized = true;
+                            game.inventory.fertilizer--;
+                        }
+                        let speedMod = p.fertilized ? 2 : 1;
                         let neededTime = (CROPS[p.crop].time / speedMod) - (game.lastSave - p.time);
                         if (p.state === 'thirsty') neededTime = (CROPS[p.crop].time / speedMod) - (p.pausedAt - p.time);
                         
@@ -404,17 +430,28 @@
             
             game.animals.forEach((a, i) => {
                 if (a.state === 'working') {
+                    let aSpeed = a.fertilized ? 2 : 1;
                     if (i < animalCap) {
-                        let cycles = Math.floor(elapsedMs / ANIMALS[a.type].time);
-                        if (cycles > 0) { game.inventory[ANIMALS[a.type].item] += cycles; itemsHarvested += cycles; a.time = now; } 
-                        else if (elapsedMs >= ANIMALS[a.type].time) a.state = 'ready';
+                        let cycleTime = ANIMALS[a.type].time / aSpeed;
+                        let cycles = Math.floor(elapsedMs / cycleTime);
+                        if (cycles > 0) { 
+                            game.inventory[ANIMALS[a.type].item] += cycles; 
+                            itemsHarvested += cycles; 
+                            a.time = now; 
+                            a.fertilized = false;
+                        } 
+                        else if (elapsedMs >= cycleTime) a.state = 'ready';
                     } else {
-                        if (elapsedMs >= ANIMALS[a.type].time) a.state = 'ready';
+                        if (elapsedMs >= ANIMALS[a.type].time / aSpeed) a.state = 'ready';
                     }
                 }
             });
             
-            game.factories.forEach(f => { if(f.state === 'working' && elapsedMs >= FACTORIES[f.id].time) f.state = 'ready'; });
+            game.factories.forEach(f => { 
+                let fSpeed = f.fertilized ? 2 : 1;
+                if(f.state === 'working' && elapsedMs >= FACTORIES[f.id].time / fSpeed) f.state = 'ready'; 
+            });
+            
             game.coins += earnedCoins;
             
             if (earnedCoins > 0 || itemsHarvested > 0) {
@@ -523,7 +560,7 @@
 
         function buildFactory(id, price, lvlReq) {
             if(game.level >= lvlReq && game.coins >= price && !game.factories.find(f => f.id === id)) {
-                game.coins -= price; game.factories.push({id: id, state: 'idle', time: null}); save(true);
+                game.coins -= price; game.factories.push({id: id, state: 'idle', time: null, fertilized: false}); save(true);
             }
         }
 
@@ -543,7 +580,7 @@
         function startFactory() {
             let f = game.factories[activeFactoryIndex]; let info = FACTORIES[f.id];
             for(let item in info.req) game.inventory[item] -= info.req[item];
-            f.state = 'working'; f.time = Date.now(); closeModal('modal-factory'); save(true);
+            f.state = 'working'; f.time = Date.now(); f.fertilized = false; closeModal('modal-factory'); save(true);
         }
 
         function switchTab(tabId) { document.querySelectorAll('.view, .nav-btn').forEach(el => el.classList.remove('active')); document.getElementById('view-' + tabId).classList.add('active'); event.currentTarget.classList.add('active'); }
@@ -561,7 +598,7 @@
         function plantSeed(cropName, lvlReq) { 
             if(game.level < lvlReq) return; 
             closeModal('modal-seeds'); 
-            let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = cropName; p.time = Date.now(); 
+            let p = game.pots[activePotIndex]; p.state = 'growing'; p.crop = cropName; p.time = Date.now(); p.fertilized = false;
             p.waterExpires = Date.now() + 14400000; 
             save(true); 
         }
@@ -590,7 +627,7 @@
             let m = (game.pens[type] || 0) * 6;
             if (c >= m) { tg.HapticFeedback.notificationOccurred('error'); return; }
             if (game.level >= lvlReq && game.coins >= price) { 
-                game.coins -= price; game.animals.push({type: type, state: 'working', time: Date.now()}); save(true); 
+                game.coins -= price; game.animals.push({type: type, state: 'working', time: Date.now(), fertilized: false}); save(true); 
             } 
         }
         
@@ -598,7 +635,7 @@
             let m = 4 + (game.greenhouseCount * 8);
             if (game.pots.length >= m) { tg.HapticFeedback.notificationOccurred('error'); return; }
             if (game.coins >= 70) { 
-                game.coins -= 70; game.pots.push({state: 'empty', crop: null, time: null, waterExpires: 0, pausedAt: null}); save(true); 
+                game.coins -= 70; game.pots.push({state: 'empty', crop: null, time: null, waterExpires: 0, pausedAt: null, fertilized: false}); save(true); 
             } 
         }
 
@@ -687,7 +724,7 @@
             document.getElementById('greenhouse-card').innerHTML = `<div style="font-size:40px">🌬</div><b>Теплица</b><br><small>Построено: ${game.greenhouseCount}<br>Дает +8 мест для грядок навсегда</small><br><br><button class="btn blue" onclick="buyGreenhouse()">Купить (${gPrice} 🪙)</button>`;
 
             if(game.upgrades.fastGrowth) {
-                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🚜✨</div><b>Комбайн</b><br><small>Автоматически тратит удобрения<br>на 40 грядок каждую секунду</small><br><br><button class="btn blue" disabled>Куплено</button>`;
+                document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🚜✨</div><b>Комбайн</b><br><small>Автоматически тратит удобрения<br>на 40 грядок (Скорость x2)</small><br><br><button class="btn blue" disabled>Куплено</button>`;
             } else {
                 document.getElementById('super-fert-card').innerHTML = `<div style="font-size:40px">🚜✨</div><b>Комбайн</b><br><small>Сам тратит удобрения на 40 грядок<br>(Требует покупки удобрений)</small><br><br><button class="btn blue" onclick="buildUpgrade('fastGrowth', 80000)">Купить (80000 🪙)</button>`;
             }
@@ -733,14 +770,14 @@
                     };
                 } else {
                     if(p.state === 'empty') s.innerText = '🟫'; 
-                    else if(p.state === 'growing') { s.innerText = '🌱'; s.innerHTML += '<div class="timer"></div>'; } 
+                    else if(p.state === 'growing') { s.innerText = p.fertilized ? '🌱✨' : '🌱'; s.innerHTML += '<div class="timer"></div>'; } 
                     else if(p.state === 'thirsty') { s.innerText = '💧'; s.style.background = '#85c1e9'; s.style.boxShadow = '0 5px 0 #3498db'; }
                     else s.innerText = EMOJI[p.crop];
                     
                     s.onclick = () => { 
                         if(p.state === 'empty') { activePotIndex = i; document.getElementById('modal-seeds').style.display = 'flex'; } 
-                        else if(p.state === 'growing' && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; p.state = 'ready'; save(true); } 
-                        else if(p.state === 'ready') { p.state = 'empty'; game.inventory[p.crop]++; addXp(1); save(true); } 
+                        else if(p.state === 'growing' && !p.fertilized && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; p.fertilized = true; save(true); } 
+                        else if(p.state === 'ready') { p.state = 'empty'; p.fertilized = false; game.inventory[p.crop]++; addXp(1); save(true); } 
                     };
                 }
                 fGrid.appendChild(s);
@@ -749,8 +786,11 @@
             const aGrid = document.getElementById('animal-grid'); aGrid.innerHTML = '';
             game.animals.forEach((a) => {
                 const s = document.createElement('div'); s.className = 'slot animal'; const info = ANIMALS[a.type];
-                if(a.state === 'working') { s.innerText = info.w; s.innerHTML += '<div class="timer"></div>'; } else s.innerText = info.r;
-                s.onclick = () => { if(a.state === 'working' && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; a.state = 'ready'; save(true); } else if(a.state === 'ready') { a.state = 'working'; a.time = Date.now(); game.inventory[info.item]++; addXp(2); save(true); } };
+                if(a.state === 'working') { s.innerText = info.w + (a.fertilized ? '✨' : ''); s.innerHTML += '<div class="timer"></div>'; } else s.innerText = info.r;
+                s.onclick = () => { 
+                    if(a.state === 'working' && !a.fertilized && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; a.fertilized = true; save(true); } 
+                    else if(a.state === 'ready') { a.state = 'working'; a.time = Date.now(); a.fertilized = false; game.inventory[info.item]++; addXp(2); save(true); } 
+                };
                 aGrid.appendChild(s);
             });
 
@@ -758,13 +798,13 @@
             game.factories.forEach((f, i) => {
                 const s = document.createElement('div'); s.className = 'slot factory'; const info = FACTORIES[f.id];
                 if(f.state === 'idle') { s.innerText = '💤'; s.innerHTML += `<div>${info.emoji}</div>`; }
-                else if(f.state === 'working') { s.innerText = '⚙️'; s.innerHTML += '<div class="timer"></div>'; }
+                else if(f.state === 'working') { s.innerText = '⚙️' + (f.fertilized ? '✨' : ''); s.innerHTML += '<div class="timer"></div>'; }
                 else if(f.state === 'ready') { s.innerText = info.emoji; }
                 
                 s.onclick = () => {
                     if(f.state === 'idle') openFactoryModal(i);
-                    else if(f.state === 'working' && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; f.state = 'ready'; save(true); }
-                    else if(f.state === 'ready') { f.state = 'idle'; game.inventory[info.product]++; addXp(5); save(true); }
+                    else if(f.state === 'working' && !f.fertilized && game.inventory.fertilizer > 0) { game.inventory.fertilizer--; f.fertilized = true; save(true); }
+                    else if(f.state === 'ready') { f.state = 'idle'; f.fertilized = false; game.inventory[info.product]++; addXp(5); save(true); }
                 };
                 facGrid.appendChild(s);
             });
@@ -803,28 +843,34 @@
                     if (!hasWater) {
                         p.state = 'thirsty'; p.pausedAt = now; needsSave = true;
                     } else {
-                        // АВТО-КОМБАЙН С УДОБРЕНИЯМИ (Сжигает 1 удобрение за секунду на грядку)
-                        if (game.upgrades.fastGrowth && i < 40 && game.inventory.fertilizer > 0) {
+                        // АВТО-КОМБАЙН С УДОБРЕНИЯМИ (Тратит 1 шт и дает x2 к скорости до конца роста)
+                        if (game.upgrades.fastGrowth && i < 40 && !p.fertilized && game.inventory.fertilizer > 0) {
                             game.inventory.fertilizer--;
-                            p.state = 'ready';
+                            p.fertilized = true;
                             needsSave = true;
                         }
-                        else if (p.crop && now - p.time >= CROPS[p.crop].time) {
+                        
+                        let speedMod = p.fertilized ? 2 : 1;
+                        if (p.crop && now - p.time >= (CROPS[p.crop].time / speedMod)) {
                             p.state = 'ready'; needsSave = true;
                         }
                     }
                 }
                 if (p.state === 'ready' && i < activeTractors * 8) {
-                    p.state = 'growing'; p.time = now; game.inventory[p.crop]++; addXp(1); needsSave = true;
+                    p.state = 'growing'; p.time = now; p.fertilized = false; game.inventory[p.crop]++; addXp(1); needsSave = true;
                 }
             });
 
             game.animals.forEach((a, i) => {
-                if (a.state === 'working' && now - a.time >= ANIMALS[a.type].time) { a.state = 'ready'; needsSave = true; }
-                if (a.state === 'ready' && i < animalCap) { a.state = 'working'; a.time = now; game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true; }
+                let aSpeed = a.fertilized ? 2 : 1;
+                if (a.state === 'working' && now - a.time >= (ANIMALS[a.type].time / aSpeed)) { a.state = 'ready'; needsSave = true; }
+                if (a.state === 'ready' && i < animalCap) { a.state = 'working'; a.time = now; a.fertilized = false; game.inventory[ANIMALS[a.type].item]++; addXp(2); needsSave = true; }
             });
 
-            game.factories.forEach(f => { if(f.state === 'working' && now - f.time >= FACTORIES[f.id].time) { f.state = 'ready'; needsSave = true; } });
+            game.factories.forEach(f => { 
+                let fSpeed = f.fertilized ? 2 : 1;
+                if(f.state === 'working' && now - f.time >= (FACTORIES[f.id].time / fSpeed)) { f.state = 'ready'; needsSave = true; } 
+            });
             
             if (needsSave) save(); 
         }
